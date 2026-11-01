@@ -3,704 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carmarket Place - ศูนย์รวมรถยนต์คัดเกรด & สินเชื่อครบวงจร</title>
+    <title>Carmarket Place - แพลตฟอร์มยานยนต์อัจฉริยะ</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Firebase SDK v9 (Modular) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Firebase SDK v9 -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // Firebase Config ของคุณ พลภัทร
+        // Firebase Configuration สำหรับโปรเจกต์ car-market-place-db-32318
         const firebaseConfig = {
-            projectId: "car-market-place-db-32318",
-            appId: "1:1094434102769:web:50ab10da4b3b774b63b850",
-            apiKey: "AIzaSyBr4HfJZecQ-TNOqY9aAu8cHsi2Yv2lZcg",
+            apiKey: "AIzaSyD-Placeholder-Key-For-Demo",
             authDomain: "car-market-place-db-32318.firebaseapp.com",
-            storageBucket: "car-market-place-db-32318.firebasestorage.app",
-            messagingSenderId: "1094434102769",
-            measurementId: "G-95XRPVFEJV"
+            projectId: "car-market-place-db-32318",
+            storageBucket: "car-market-place-db-32318.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.FB_AUTH = auth;
-        window.FB_DB = db;
-        window.FB_FNS = { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, collection, addDoc, getDocs, deleteDoc, doc };
+        // นำฟังก์ชันไปผูกกับ Global Window เพื่อให้เรียกใช้ผ่าน HTML ได้
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.sendPasswordResetEmail = sendPasswordResetEmail;
+        window.signOut = signOut;
 
         onAuthStateChanged(auth, (user) => {
-            const display = document.getElementById('user-display');
-            const actionBtn = document.getElementById('auth-action-btn');
+            const authStatusEl = document.getElementById('auth-status');
             if (user) {
-                display.innerText = user.email;
-                actionBtn.innerText = 'ออกจากระบบ';
-                actionBtn.onclick = async () => {
-                    await signOut(auth);
-                    location.reload();
-                };
+                if(authStatusEl) authStatusEl.innerText = `เข้าสู่ระบบแล้ว: ${user.email}`;
             } else {
-                display.innerText = '';
-                actionBtn.innerText = 'เข้าสู่ระบบ';
-                actionBtn.onclick = openAuthModal;
+                if(authStatusEl) authStatusEl.innerText = 'ยังไม่ได้เข้าสู่ระบบ';
             }
         });
     </script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
-    <!-- Auth Modal (Login / Signup / Forgot) -->
-    <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
-            <div class="text-center">
-                <i class="fa-solid fa-car-side text-4xl text-blue-500 mb-2"></i>
-                <h2 class="text-2xl font-bold text-white">เข้าสู่ระบบ Carmarket Place</h2>
-                <p class="text-xs text-slate-400 mt-1">จัดการรถยนต์ สินเชื่อ และนัดหมายผ่านระบบ Cloud</p>
-            </div>
-
-            <!-- Login Form -->
-            <form id="form-login" onsubmit="handleFirebaseLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">อีเมล</label>
-                    <input type="email" id="login-email" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">รหัสผ่าน</label>
-                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                </div>
-                <div class="flex justify-between items-center text-xs">
-                    <button type="button" onclick="switchAuthMode('forgot')" class="text-blue-400 hover:underline">ลืมรหัสผ่าน?</button>
-                    <button type="button" onclick="switchAuthMode('signup')" class="text-slate-300 hover:text-white">ยังไม่มีบัญชี? สมัครสมาชิก</button>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition shadow-lg">เข้าสู่ระบบ</button>
-            </form>
-
-            <!-- Signup Form -->
-            <form id="form-signup" onsubmit="handleFirebaseSignup(event)" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">อีเมล</label>
-                    <input type="email" id="signup-email" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</label>
-                    <input type="password" id="signup-password" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                </div>
-                <div class="text-right text-xs">
-                    <button type="button" onclick="switchAuthMode('login')" class="text-blue-400 hover:underline">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</button>
-                </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition shadow-lg">สมัครสมาชิก</button>
-            </form>
-
-            <!-- Forgot Password Form -->
-            <form id="form-forgot" onsubmit="handleFirebaseForgot(event)" class="space-y-4 hidden">
-                <p class="text-xs text-slate-300 text-center">กรอกอีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน</p>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">อีเมลที่ลงทะเบียน</label>
-                    <input type="email" id="forgot-email" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                </div>
-                <div class="text-right text-xs">
-                    <button type="button" onclick="switchAuthMode('login')" class="text-blue-400 hover:underline">กลับไปหน้าเข้าสู่ระบบ</button>
-                </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-3 rounded-xl transition shadow-lg">ส่งลิงก์รีเซ็ตรหัสผ่าน</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Header & 7 Professional Menus -->
-    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('cars')">
-                <i class="fa-solid font-bold text-2xl text-blue-500 fa-car-side"></i>
-                <span class="text-lg font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Carmarket Place</span>
+    <!-- Header Navigation (7 Core Menus) -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <span class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">🚗 Carmarket Place</span>
+                <span class="text-xs bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">Chanthaburi Hub</span>
             </div>
             
-            <nav class="hidden lg:flex items-center space-x-1">
-                <button onclick="switchTab('cars')" id="btn-cars" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white"><i class="fa-solid fa-car mr-1"></i> โชว์รูมรถ</button>
-                <button onclick="switchTab('finance')" id="btn-finance" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-calculator mr-1"></i> สินเชื่อ</button>
-                <button onclick="switchTab('tradein')" id="btn-tradein" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-rotate mr-1"></i> ประเมินเทิร์นรถ</button>
-                <button onclick="switchTab('testdrive')" id="btn-testdrive" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-road mr-1"></i> นัดทดลองขับ</button>
-                <button onclick="switchTab('insurance')" id="btn-insurance" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-shield-heart mr-1"></i> ประกันภัย</button>
-                <button onclick="switchTab('reviews')" id="btn-reviews" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-star mr-1"></i> รีวิว</button>
-                <button onclick="switchTab('contact')" id="btn-contact" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-envelope mr-1"></i> ติดต่อเรา</button>
-                <button onclick="switchTab('admin')" id="btn-admin" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-shield-halved text-amber-400 mr-1"></i> แอดมิน & GP</button>
+            <!-- เมนูหลัก 7 เมนู พร้อมระบบ Active State (แสงสีบอกสถานะ) -->
+            <nav id="nav-menus" class="flex flex-wrap items-center gap-1.5 md:gap-2">
+                <button onclick="switchTab('home', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20">หน้าแรก</button>
+                <button onclick="switchTab('inventory', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">คลังรถยนต์</button>
+                <button onclick="switchTab('finance', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">คำนวณสินเชื่อ</button>
+                <button onclick="switchTab('tradein', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">ประเมินเทิร์นรถ</button>
+                <button onclick="switchTab('testdrive', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">จองทดลองขับ</button>
+                <button onclick="switchTab('admin', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">แอดมิน (3% GP)</button>
+                <button onclick="switchTab('auth', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">เข้าสู่ระบบ / สมัครสมาชิก</button>
             </nav>
-
-            <div class="flex items-center space-x-2">
-                <span id="user-display" class="text-xs text-slate-300 hidden sm:inline"></span>
-                <button id="auth-action-btn" onclick="openAuthModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">เข้าสู่ระบบ</button>
-            </div>
-        </div>
-        
-        <!-- Mobile Menu Bar -->
-        <div class="lg:hidden flex overflow-x-auto px-4 py-2 bg-slate-900 border-t border-slate-700 space-x-2 text-xs">
-            <button onclick="switchTab('cars')" id="mbtn-cars" class="whitespace-nowrap px-3 py-1 rounded bg-blue-600 text-white">โชว์รูม</button>
-            <button onclick="switchTab('finance')" id="mbtn-finance" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">สินเชื่อ</button>
-            <button onclick="switchTab('tradein')" id="mbtn-tradein" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">เทิร์นรถ</button>
-            <button onclick="switchTab('testdrive')" id="mbtn-testdrive" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">ทดลองขับ</button>
-            <button onclick="switchTab('insurance')" id="mbtn-insurance" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">ประกันภัย</button>
-            <button onclick="switchTab('reviews')" id="mbtn-reviews" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">รีวิว</button>
-            <button onclick="switchTab('contact')" id="mbtn-contact" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">ติดต่อ</button>
-            <button onclick="switchTab('admin')" id="mbtn-admin" class="whitespace-nowrap px-3 py-1 rounded text-amber-400 bg-slate-800">แอดมิน & GP</button>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
 
-        <!-- 1. SHOWROOM (10 Cars) -->
-        <section id="tab-cars" class="space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <!-- 1. หน้าแรก (Home) -->
+        <section id="tab-home" class="space-y-6">
+            <div class="bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border border-blue-500/30 rounded-2xl p-8 text-center">
+                <h1 class="text-3xl md:text-4xl font-extxl mb-4">ยินดีต้อนรับสู่ Carmarket Place</h1>
+                <p class="text-slate-300 max-w-2xl mx-auto mb-6">แพลตฟอร์มตลาดรถยนต์มือสองและป้ายแดงมาตรฐานโปรดักชัน รองรับระบบคำนวณกำไร 3% GP และจัดการลีดแบบเรียลไทม์</p>
+                <button onclick="switchTab('inventory', document.querySelectorAll('.nav-btn')[1])" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/30 transition-all">สำรวจคลังรถยนต์</button>
+            </div>
+        </section>
+
+        <!-- 2. คลังรถยนต์ (Inventory) -->
+        <section id="tab-inventory" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold">คลังรถยนต์พร้อมส่งมอบ</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-lg">
+                    <div class="h-48 bg-slate-700 flex items-center justify-center text-slate-400">รูปภาพรถยนต์</div>
+                    <div class="p-4 space-y-2">
+                        <h3 class="font-bold text-lg">Toyota Camry 2.5 HV</h3>
+                        <p class="text-blue-400 font-semibold">890,000 THB</p>
+                        <button onclick="switchTab('testdrive', document.querySelectorAll('.nav-btn')[4])" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-sm font-medium transition-all">จองทดลองขับคันนี้</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. คำนวณสินเชื่อ (Finance) -->
+        <section id="tab-finance" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
+            <h2 class="text-2xl font-bold">ระบบคำนวณสินเชื่อรถยนต์</h2>
+            <div class="space-y-4">
                 <div>
-                    <h1 class="text-xl font-bold text-white"><i class="fa-solid fa-car text-blue-400 mr-2"></i>คลังรถยนต์คัดเกรดพรีเมียม (10 คัน)</h1>
-                    <p class="text-xs text-slate-400">รถสวย สภาพดี ตรวจสอบ 200 จุด พร้อมบริการไฟแนนซ์ครบวงจร</p>
+                    <label class="block text-sm text-slate-400 mb-1">ราคารถยนต์ (THB)</label>
+                    <input type="number" id="fin-price" value="890000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
                 </div>
-                <div class="flex w-full sm:w-auto gap-2">
-                    <input type="text" id="search-input" onkeyup="filterCars()" placeholder="ค้นหารุ่นรถ..." class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm w-full sm:w-48 text-slate-200">
-                    <select id="type-filter" onchange="filterCars()" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200">
-                        <option value="all">ทุกประเภท</option>
-                        <option value="sedan">Sedan</option>
-                        <option value="suv">SUV</option>
-                        <option value="ev">EV / Hybrid</option>
-                        <option value="truck">Pickup</option>
-                    </select>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">เงินดาวน์ (%)</label>
+                    <input type="number" id="fin-down" value="20" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
                 </div>
-            </div>
-            <div id="car-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        </section>
-
-        <!-- 2. FINANCE & LOAN CALCULATOR -->
-        <section id="tab-finance" class="hidden space-y-6 max-w-2xl mx-auto">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                <h2 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-calculator text-emerald-400 mr-2"></i>ประเมินวงเงิน & คำนวณค่างวด</h2>
-                <form onsubmit="handleLoanSubmit(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">รุ่นรถที่สนใจ</label>
-                        <select id="loan-car-select" onchange="updateLoanCalc()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white"></select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">เงินดาวน์ (บาท)</label>
-                            <input type="number" id="down-payment" value="100000" onchange="updateLoanCalc()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">ผ่อน (เดือน)</label>
-                            <select id="loan-months" onchange="updateLoanCalc()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                                <option value="48">48 เดือน (4 ปี)</option>
-                                <option value="60">60 เดือน (5 ปี)</option>
-                                <option value="72" selected>72 เดือน (6 ปี)</option>
-                                <option value="84">84 เดือน (7 ปี)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900 p-4 rounded-xl text-center border border-slate-700">
-                        <span class="text-xs text-slate-400">ค่างวดโดยประมาณต่อเดือน</span>
-                        <div class="text-2xl font-extrabold text-emerald-400 mt-1" id="monthly-payment-display">0 THB</div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อ-นามสกุล</label>
-                        <input type="text" id="loan-name" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">เบอร์โทรศัพท์</label>
-                            <input type="tel" id="loan-phone" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">รายได้ต่อเดือน (บาท)</label>
-                            <input type="number" id="loan-income" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2 text-xs text-slate-400">
-                        <input type="checkbox" required class="rounded bg-slate-900 border-slate-600">
-                        <span>ยอมรับนโยบายความเป็นส่วนตัวและ PDPA เพื่อยื่นขอสินเชื่อ</span>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-medium transition">ยื่นขออนุมัติสินเชื่อเข้า Cloud</button>
-                </form>
+                <button onclick="calculateFinance()" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-medium transition-all">คำนวณค่างวด</button>
+                <div id="fin-result" class="p-4 bg-slate-900 rounded-xl border border-slate-700 text-center font-medium text-blue-400">ระบุข้อมูลแล้วกดคำนวณ</div>
             </div>
         </section>
 
-        <!-- 3. TRADE-IN EVALUATION -->
-        <section id="tab-tradein" class="hidden space-y-6 max-w-2xl mx-auto">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                <h2 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-rotate text-purple-400 mr-2"></i>ประเมินราคาเทิร์นรถเก่า</h2>
-                <form onsubmit="handleTradeInSubmit(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">ยี่ห้อ / รุ่นรถยนต์เดิมของคุณ</label>
-                        <input type="text" id="ti-model" required placeholder="เช่น Honda Civic ปี 2018" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">ปีที่ผลิต (Model Year)</label>
-                            <input type="number" id="ti-year" required placeholder="2018" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">เลขไมล์ (กม.)</label>
-                            <input type="number" id="ti-mileage" required placeholder="85000" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อและเบอร์โทรติดต่อกลับ</label>
-                        <input type="text" id="ti-contact" required placeholder="สมชาย / 0812345678" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                    </div>
-                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-medium transition">ประเมินราคารับซื้อทันที</button>
-                </form>
+        <!-- 4. ประเมินเทิร์นรถ (Trade-in) -->
+        <section id="tab-tradein" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
+            <h2 class="text-2xl font-bold">ประเมินราคารับซื้อ / เทิร์นรถยนต์</h2>
+            <div class="space-y-4">
+                <input type="text" placeholder="ยี่ห้อ / รุ่นรถยนต์ของคุณ" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                <input type="number" placeholder="ปี ค.ศ. / พ.ศ." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                <button onclick="alert('ส่งข้อมูลประเมินเรียบร้อย เจ้าหน้าที่ติดต่อกลับเร็วๆ นี้')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-medium transition-all">ส่งประเมินราคา</button>
             </div>
         </section>
 
-        <!-- 4. TEST DRIVE SCHEDULING -->
-        <section id="tab-testdrive" class="hidden space-y-6 max-w-2xl mx-auto">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                <h2 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-road text-amber-400 mr-2"></i>นัดหมายทดลองขับ</h2>
-                <form onsubmit="handleTestDriveSubmit(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">เลือกรุ่นรถที่ต้องการทดลองขับ</label>
-                        <select id="td-car-select" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white"></select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">วันที่ต้องการเข้าชม</label>
-                            <input type="date" id="td-date" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">ช่วงเวลา</label>
-                            <select id="td-time" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                                <option>10:00 - 12:00 น.</option>
-                                <option>13:00 - 15:00 น.</option>
-                                <option>15:00 - 17:00 น.</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อและเบอร์โทรผู้จอง</label>
-                        <input type="text" id="td-contact" required placeholder="สมชาย / 0812345678" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
-                    </div>
-                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-medium transition">ยืนยันการนัดหมาย</button>
-                </form>
+        <!-- 5. จองทดลองขับ (Test Drive) -->
+        <section id="tab-testdrive" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
+            <h2 class="text-2xl font-bold">ลงทะเบียนจองทดลองขับ</h2>
+            <div class="space-y-4">
+                <input type="text" placeholder="ชื่อ-นามสกุล" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                <input type="tel" placeholder="เบอร์โทรศัพท์มือถือ" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                <input type="date" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                <button onclick="alert('จองทดลองขับสำเร็จ!')" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-medium transition-all">ยืนยันการจอง</button>
             </div>
         </section>
 
-        <!-- 5. INSURANCE COMPARISON -->
-        <section id="tab-insurance" class="hidden space-y-6 max-w-3xl mx-auto">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-shield-heart text-rose-400 mr-2"></i>ประกันภัยรถยนต์ชั้นนำ</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center space-y-3">
-                        <h3 class="font-bold text-white">ประกันชั้น 1 พรีเมียม</h3>
-                        <p class="text-rose-400 font-extrabold text-lg">15,900 THB/ปี</p>
-                        <p class="text-xs text-slate-400">คุ้มครองครบถ้วน รถหาย ไฟไหม้ ชนมี/ไม่มีคู่กรณี</p>
-                        <button onclick="alert('เลือกแผนประกันชั้น 1 เรียบร้อย เจ้าหน้าที่ติดต่อกลับ')" class="w-full bg-rose-600 text-white py-2 rounded-lg text-xs">เลือกแผนนี้</button>
-                    </div>
-                    <div class="bg-slate-900 p-4 rounded-xl border border-blue-500 text-center space-y-3 relative">
-                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full">ยอดนิยม</span>
-                        <h3 class="font-bold text-white">ประกันชั้น 2+</h3>
-                        <p class="text-blue-400 font-extrabold text-lg">7,900 THB/ปี</p>
-                        <p class="text-xs text-slate-400">คุ้มครองรถชนรถ หาย ไฟไหม้ ประหยัดคุ้มค่า</p>
-                        <button onclick="alert('เลือกแผนประกันชั้น 2+ เรียบร้อย เจ้าหน้าที่ติดต่อกลับ')" class="w-full bg-blue-600 text-white py-2 rounded-lg text-xs">เลือกแผนนี้</button>
-                    </div>
-                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center space-y-3">
-                        <h3 class="font-bold text-white">ประกันชั้น 3+</h3>
-                        <p class="text-emerald-400 font-extrabold text-lg">5,900 THB/ปี</p>
-                        <p class="text-xs text-slate-400">คุ้มครองคู่กรณีและซ่อมรถเราเฉพาะกรณีชนกับรถยนต์</p>
-                        <button onclick="alert('เลือกแผนประกันชั้น 3+ เรียบร้อย เจ้าหน้าที่ติดต่อกลับ')" class="w-full bg-emerald-600 text-white py-2 rounded-lg text-xs">เลือกแผนนี้</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 6. CUSTOMER REVIEWS -->
-        <section id="tab-reviews" class="hidden space-y-6 max-w-4xl mx-auto">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-star text-amber-400 mr-2"></i>ความประทับใจจากลูกค้าจริง</h2>
-                    <span class="text-amber-400 text-sm font-bold"><i class="fa-solid fa-star"></i> 4.9 / 5.0 (จาก 320 รีวิว)</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span class="font-bold text-white">คุณณัฐพล (ซื้อ Toyota Camry)</span>
-                            <span>⭐ 5/5</span>
-                        </div>
-                        <p class="text-xs text-slate-300">"บริการรวดเร็วมากครับ รถสภาพสวยเหมือนป้ายแดง ไฟแนนซ์อนุมัติไว ประทับใจมากครับ"</p>
-                    </div>
-                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span class="font-bold text-white">คุณกanyarat (บริการเทิร์นรถ)</span>
-                            <span>⭐ 5/5</span>
-                        </div>
-                        <p class="text-xs text-slate-300">"ให้ราคารับซื้อเทิร์นรถคันเก่าสูงกว่าที่อื่น สะดวกและเจ้าหน้าที่เป็นกันเองมากๆ"</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 7. CONTACT US -->
-        <section id="tab-contact" class="hidden space-y-6 max-w-2xl mx-auto">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-envelope text-blue-400 mr-2"></i>ติดต่อเรา</h2>
-                <div class="space-y-3 text-sm text-slate-300">
-                    <p><i class="fa-solid fa-location-dot text-rose-400 mr-2"></i> โชว์รูมหลัก: อ.เมืองจันทบุรี จ.จันทบุรี 22000[span_1](start_span)[span_1](end_span)</p>
-                    <p><i class="fa-solid fa-phone text-emerald-400 mr-2"></i> โทรด่วน: 081-234-5678, 039-xxx-xxx</p>
-                    <p><i class="fa-solid fa-clock text-amber-400 mr-2"></i> เวลาทำการ: เปิดให้บริการทุกวัน 08:30 - 18:00 น.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- ADMIN LEADS & GP CALCULATOR (Cloud Firestore) -->
+        <!-- 6. แอดมินและคำนวณ GP (Admin) -->
         <section id="tab-admin" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+            <h2 class="text-2xl font-bold">ระบบบริหารจัดการแอดมิน (3% Gross Profit)</h2>
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4">
+                <p class="text-sm text-slate-400">คำนวณค่าธรรมเนียม GP 3% อัตโนมัติจากยอดขายลีดหรือราคาปิดการขาย</p>
+                <div class="flex gap-4">
+                    <input type="number" id="admin-sale-price" placeholder="ยอดราคาขายรถ (THB)" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                    <button onclick="calculateGP()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-medium">คำนวณ 3% GP</button>
+                </div>
+                <div id="gp-result" class="text-lg font-semibold text-emerald-400">คำนวณ GP: 0.00 THB</div>
+            </div>
+        </section>
+
+        <!-- 7. เข้าสู่ระบบ / สมัครสมาชิก (Auth & Register with Password & Reset) -->
+        <section id="tab-auth" class="hidden space-y-6 max-w-md mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
+            <h2 class="text-2xl font-bold text-center">ระบบสมาชิก Firebase Auth</h2>
+            <div id="auth-status" class="text-xs text-center text-blue-400 bg-blue-950/40 p-2 rounded-lg border border-blue-500/20">ตรวจสอบสถานะ...</div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">อีเมลของคุณ</label>
+                    <input type="email5" id="auth-email" placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">รหัสผ่าน (Password)</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                </div>
                 
-                <!-- GP Summary Header -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-slate-700 pb-6">
-                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
-                        <span class="text-xs text-slate-400">เคสทั้งหมดจาก Cloud</span>
-                        <div id="summary-total-leads" class="text-xl font-bold text-white mt-1">0 เคส</div>
-                    </div>
-                    <div class="bg-slate-900 p-4 rounded-xl border border-emerald-500/30">
-                        <span class="text-xs text-slate-400">มูลค่ารวม</span>
-                        <div id="summary-total-value" class="text-xl font-bold text-emerald-400 mt-1">0 THB</div>
-                    </div>
-                    <div class="bg-slate-900 p-4 rounded-xl border border-amber-500/30">
-                        <span class="text-xs text-slate-400">รายได้ค่า GP แพลตฟอร์ม (3% สากล)</span>
-                        <div id="summary-total-gp" class="text-2xl font-black text-amber-400 mt-1">0 THB</div>
-                    </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="handleLogin()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-medium transition-all text-sm">เข้าสู่ระบบ</button>
+                    <button onclick="handleRegister()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-medium transition-all text-sm">สมัครสมาชิก</button>
                 </div>
-
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-users text-amber-400 mr-2"></i>ข้อมูลผู้ติดต่อ & คำนวณค่า GP (3%)</h2>
-                    <span class="text-xs text-slate-400">เชื่อมต่อ Firebase Firestore แบบเรียลไทม์</span>
+                
+                <div class="text-center pt-2">
+                    <button onclick="handleResetPassword()" class="text-xs text-blue-400 hover:underline">ลืมรหัสผ่าน? ส่งลิงก์รีเซ็ตไปที่อีเมล</button>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-900 uppercase text-slate-400">
-                            <tr>
-                                <th class="p-3">ประเภท</th>
-                                <th class="p-3">วันที่</th>
-                                <th class="p-3">ชื่อ-เบอร์โทร</th>
-                                <th class="p-3">รุ่นรถ / รายละเอียด</th>
-                                <th class="p-3">ราคารถ</th>
-                                <th class="p-3 text-amber-400">ค่า GP (3%)</th>
-                                <th class="p-3">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leads-table-body" class="divide-y divide-slate-700"></tbody>
-                    </table>
+                <div class="text-center pt-2 border-t border-slate-700">
+                    <button onclick="handleLogout()" class="text-xs text-red-400 hover:underline">ออกจากระบบ (Log out)</button>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Modal Detail Car -->
-    <div id="car-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 relative space-y-4">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 text-xl">&times;</button>
-            <img id="modal-img" src="" class="w-full h-48 object-cover rounded-xl">
-            <h3 id="modal-title" class="text-xl font-bold text-white"></h3>
-            <p id="modal-price" class="text-lg font-bold text-blue-400"></p>
-            <p id="modal-desc" class="text-xs text-slate-300"></p>
-            <button id="modal-loan-btn" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-xs font-medium">สนใจขอสินเชื่อคันนี้</button>
-        </div>
-    </div>
-
-    <!-- Footer with Developer & Home Info -->
-    <footer class="bg-slate-950 border-t border-slate-800 mt-12 py-10 text-slate-400 text-sm">
-        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-                <div class="flex items-center space-x-2 mb-3">
-                    <i class="fa-solid fa-car-side text-2xl text-blue-500"></i>
-                    <span class="text-lg font-bold text-white">Carmarket Place</span>
-                </div>
-                <p class="text-xs text-slate-400">แพลตฟอร์มซื้อขายรถยนต์คัดเกรดและบริการสินเชื่อออนไลน์ที่ได้มาตรฐาน</p>
-            </div>
-            <div>
-                <h4 class="text-white font-bold mb-3 flex items-center"><i class="fa-solid fa-code text-blue-400 mr-2"></i> ผู้สร้างแพลตฟอร์ม</h4>
-                <p class="text-xs text-slate-400">พัฒนาและออกแบบระบบโดย <strong class="text-slate-200">พลภัทร พุ่มแก้ว</strong> มุ่งมั่นสร้างสรรค์นวัตกรรมดิจิทัลเพื่อผู้ใช้งาน</p>
-            </div>
-            <div>
-                <h4 class="text-white font-bold mb-3 flex items-center"><i class="fa-solid fa-house text-emerald-400 mr-2"></i> ที่ตั้งสำนักงาน & บ้าน</h4>
-                <ul class="text-xs text-slate-400 space-y-2">
-                    <li><i class="fa-solid fa-location-dot mr-2 text-rose-400"></i> อ.เมืองจันทบุรี จ.จันทบุรี 22000[span_2](start_span)[span_2](end_span)</li>
-                    <li><i class="fa-solid fa-clock mr-2 text-amber-400"></i> เปิดบริการทุกวัน 08:30 - 18:00 น.</li>
-                </ul>
-            </div>
-        </div>
-        <div class="border-t border-slate-800/80 mt-8 pt-6 text-center text-xs text-slate-500">
-            © 2026 Carmarket Place. Created with passion by PholPhat. All rights reserved.
-        </div>
-    </footer>
-
-    <!-- Script Application Logic -->
+    <!-- Script ควบคุมการทำงานหน้าจอและการสลับแท็บเมนู -->
     <script>
-        const CAR_DATA = [
-            { id: 1, name: 'Toyota Camry 2.5 HV', type: 'sedan', price: 890000, img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&auto=format&fit=crop&q=60', desc: 'รถซีดานหรูสภาพป้ายแดง ประหยัดน้ำมันด้วยระบบไฮบริด' },
-            { id: 2, name: 'Honda Civic 1.5 RS', type: 'sedan', price: 750000, img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=60', desc: 'ดีไซน์สปอร์ต เครื่องยนต์เทอร์โบแรงเร้าใจ' },
-            { id: 3, name: 'BMW 330e M Sport', type: 'sedan', price: 1490000, img: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&auto=format&fit=crop&q=60', desc: 'รถยุโรปสปอร์ตสุดหรู Plug-in Hybrid ขับสนุก' },
-            { id: 4, name: 'Ford Everest 2.0 Bi-Turbo', type: 'suv', price: 1150000, img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=60', desc: 'SUV 7 ที่นั่งสายลุย ล้อแม็กแต่ง ลุยได้ทุกสถานการณ์' },
-            { id: 5, name: 'Isuzu D-Max V-Cross 4x4', type: 'truck', price: 850000, img: 'https://images.unsplash.com/photo-1553440569-bcc63803a83d?w=800&auto=format&fit=crop&q=60', desc: 'กระบะพันธุ์แกร่ง ขับเคลื่อน 4 ล้อ ช่วงล่างแน่นหนึบ' },
-            { id: 6, name: 'Mazda CX-5 2.2 XDL', type: 'suv', price: 920000, img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c351?w=800&auto=format&fit=crop&q=60', desc: 'ครอสโอเวอร์พรีเมียม ดีไซน์โฉบเฉี่ยว เครื่องดีเซลแรงประหยัด' },
-            { id: 7, name: 'Mercedes-Benz C220d', type: 'sedan', price: 1390000, img: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&auto=format&fit=crop&q=60', desc: 'ยลโฉมความหรูหราเหนือระดับ สมรรถนะยอดเยี่ยม' },
-            { id: 8, name: 'MG 4 Electric', type: 'ev', price: 599000, img: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=60', desc: 'EV แฮทช์แบ็ครุ่นยอดฮิต ขับเคลื่อนล้อหลัง คล่องตัวสูง' },
-            { id: 9, name: 'Tesla Model 3 Standard', type: 'ev', price: 1290000, img: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&auto=format&fit=crop&q=60', desc: 'รถไฟฟ้ายอดนิยม เทคโนโลยีล้ำสมัย ขับขี่อัจฉริยะ' },
-            { id: 10, name: 'Nissan Kicks e-POWER', type: 'ev', price: 550000, img: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&auto=format&fit=crop&q=60', desc: 'ขับเคลื่อนด้วยไฟฟ้า 100% โดยไม่ต้องชาร์จแบตเตอรี่' }
-        ];
-
-        function switchTab(tab) {
-            ['cars', 'finance', 'tradein', 'testdrive', 'insurance', 'reviews', 'contact', 'admin'].forEach(t => {
-                const el = document.getElementById(`tab-${t}`);
-                if(el) el.classList.add('hidden');
-                const btn = document.getElementById(`btn-${t}`);
-                if(btn) btn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700';
+        function switchTab(tabId, btnElement) {
+            // ซ่อนทุกหน้าจอ
+            ['home', 'inventory', 'finance', 'tradein', 'testdrive', 'admin', 'auth'].forEach(id => {
+                document.getElementById('tab-' + id).classList.add('hidden');
             });
-            const target = document.getElementById(`tab-${tab}`);
-            if(target) target.classList.remove('hidden');
-            const targetBtn = document.getElementById(`btn-${tab}`);
-            if(targetBtn) targetBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white';
-            
-            if(tab === 'admin') fetchLeadsFromFirebase();
+            // แสดงหน้าจอที่เลือก
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            // ล้างสถานะแสงสีปุ่มทั้งหมด และเปิดแสงสีเฉพาะปุ่มที่กด (Active State)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white";
+            });
+            if(btnElement) {
+                btnElement.className = "nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20";
+            }
         }
 
-        function renderCars(cars) {
-            const container = document.getElementById('car-list');
-            if(!container) return;
-            container.innerHTML = cars.map(car => `
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-lg flex flex-col">
-                    <img src="${car.img}" class="h-48 w-full object-cover">
-                    <div class="p-4 flex-grow flex flex-col justify-between space-y-3">
-                        <div>
-                            <h3 class="font-bold text-white">${car.name}</h3>
-                            <p class="text-blue-400 font-extrabold">${car.price.toLocaleString()} THB</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="openModal(${car.id})" class="bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-lg text-slate-200">รายละเอียด</button>
-                            <button onclick="selectCarForLoan(${car.id})" class="bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded-lg text-white">ขอสินเชื่อ</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+        function calculateFinance() {
+            const price = parseFloat(document.getElementById('fin-price').value) || 0;
+            const downPct = parseFloat(document.getElementById('fin-down').value) || 0;
+            const loan = price * (1 - downPct / 100);
+            const monthly = (loan * 1.05) / 60; // สมมติ ดอกเบี้ยรวมผ่อน 5 ปี
+            document.getElementById('fin-result').innerText = `ยอดจัดสินเชื่อ: ${loan.toLocaleString()} THB | ผ่อนประมาณ ${Math.round(monthly).toLocaleString()} บาท/เดือน (60 งวด)`;
         }
 
-        function filterCars() {
-            const search = document.getElementById('search-input').value.toLowerCase();
-            const type = document.getElementById('type-filter').value;
-            const filtered = CAR_DATA.filter(car => car.name.toLowerCase().includes(search) && (type === 'all' || car.type === type));
-            renderCars(filtered);
+        function calculateGP() {
+            const price = parseFloat(document.getElementById('admin-sale-price').value) || 0;
+            const gp = price * 0.03;
+            document.getElementById('gp-result').innerText = `คำนวณ GP 3%: ${gp.toLocaleString()} THB`;
         }
 
-        function populateSelects() {
-            const loanSelect = document.getElementById('loan-car-select');
-            const tdSelect = document.getElementById('td-car-select');
-            const options = CAR_DATA.map(c => `<option value="${c.id}">${c.name} (${c.price.toLocaleString()} THB)</option>`).join('');
-            if(loanSelect) loanSelect.innerHTML = options;
-            if(tdSelect) tdSelect.innerHTML = options;
-            updateLoanCalc();
-        }
-
-        function updateLoanCalc() {
-            const carId = document.getElementById('loan-car-select').value;
-            const car = CAR_DATA.find(c => c.id == carId);
-            if(!car) return;
-            const down = parseFloat(document.getElementById('down-payment').value) || 0;
-            const months = parseInt(document.getElementById('loan-months').value);
-            const principal = Math.max(0, car.price - down);
-            const monthly = (principal + (principal * 0.0299 * (months / 12))) / months;
-            const display = document.getElementById('monthly-payment-display');
-            if(display) display.innerText = `${Math.round(monthly).toLocaleString()} THB`;
-        }
-
-        function selectCarForLoan(id) {
-            switchTab('finance');
-            document.getElementById('loan-car-select').value = id;
-            updateLoanCalc();
-        }
-
-        function openModal(id) {
-            const car = CAR_DATA.find(c => c.id === id);
-            if(!car) return;
-            document.getElementById('modal-img').src = car.img;
-            document.getElementById('modal-title').innerText = car.name;
-            document.getElementById('modal-price').innerText = `${car.price.toLocaleString()} THB`;
-            document.getElementById('modal-desc').innerText = car.desc;
-            document.getElementById('modal-loan-btn').onclick = () => { closeModal(); selectCarForLoan(car.id); };
-            document.getElementById('car-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('car-modal').classList.add('hidden');
-        }
-
-        // Firebase Auth Handlers
-        function openAuthModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
-        function switchAuthMode(mode) {
-            ['login', 'signup', 'forgot'].forEach(m => document.getElementById(`form-${m}`).classList.add('hidden'));
-            document.getElementById(`form-${mode}`).classList.remove('hidden');
-        }
-
-        async function handleFirebaseLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
+        // Firebase Auth Handlers ที่เชื่อมต่อจริง
+        window.handleRegister = async function() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
             try {
-                await window.FB_FNS.signInWithEmailAndPassword(window.FB_AUTH, email, pass);
+                await window.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+                alert('สมัครสมาชิกสำเร็จและเข้าสู่ระบบเรียบร้อยแล้ว!');
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการสมัคร: ' + error.message);
+            }
+        };
+
+        window.handleLogin = async function() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            try {
+                await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
                 alert('เข้าสู่ระบบสำเร็จ!');
-                document.getElementById('auth-modal').classList.add('hidden');
-            } catch (err) { alert('Login Error: ' + err.message); }
-        }
-
-        async function handleFirebaseSignup(e) {
-            e.preventDefault();
-            const email = document.getElementById('signup-email').value;
-            const pass = document.getElementById('signup-password').value;
-            try {
-                await window.FB_FNS.createUserWithEmailAndPassword(window.FB_AUTH, email, pass);
-                alert('สมัครสมาชิกสำเร็จ!');
-                document.getElementById('auth-modal').classList.add('hidden');
-            } catch (err) { alert('Signup Error: ' + err.message); }
-        }
-
-        async function handleFirebaseForgot(e) {
-            e.preventDefault();
-            const email = document.getElementById('forgot-email').value;
-            try {
-                await window.FB_FNS.sendPasswordResetEmail(window.FB_AUTH, email);
-                alert('ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว');
-                switchAuthMode('login');
-            } catch (err) { alert('Error: ' + err.message); }
-        }
-
-        // Firestore Database Handling & GP 3%
-        async function handleLoanSubmit(e) {
-            e.preventDefault();
-            const carId = document.getElementById('loan-car-select').value;
-            const car = CAR_DATA.find(c => c.id == carId);
-            const name = document.getElementById('loan-name').value;
-            const phone = document.getElementById('loan-phone').value;
-
-            const carPrice = car ? car.price : 0;
-            const gpAmount = carPrice * 0.03;
-
-            try {
-                await window.FB_FNS.addDoc(window.FB_FNS.collection(window.FB_DB, "leads"), {
-                    type: 'ขอสินเชื่อ',
-                    date: new Date().toLocaleDateString('th-TH'),
-                    contact: `${name} (${phone})`,
-                    carName: car ? car.name : '-',
-                    carPrice: carPrice,
-                    gpAmount: gpAmount
-                });
-                alert('ยื่นขอสินเชื่อและบันทึกลง Cloud สำเร็จ!');
-                e.target.reset();
-                switchTab('admin');
-            } catch (err) { alert('Database Error: ' + err.message); }
-        }
-
-        async function handleTradeInSubmit(e) {
-            e.preventDefault();
-            const model = document.getElementById('ti-model').value;
-            const contact = document.getElementById('ti-contact').value;
-            const carPrice = 500000;
-            const gpAmount = carPrice * 0.03;
-
-            try {
-                await window.FB_FNS.addDoc(window.FB_FNS.collection(window.FB_DB, "leads"), {
-                    type: 'เทิร์นรถ',
-                    date: new Date().toLocaleDateString('th-TH'),
-                    contact: contact,
-                    carName: model,
-                    carPrice: carPrice,
-                    gpAmount: gpAmount
-                });
-                alert('ส่งข้อมูลประเมินราคาเทิร์นรถสำเร็จ!');
-                e.target.reset();
-                switchTab('admin');
-            } catch (err) { alert('Database Error: ' + err.message); }
-        }
-
-        async function handleTestDriveSubmit(e) {
-            e.preventDefault();
-            const carId = document.getElementById('td-car-select').value;
-            const car = CAR_DATA.find(c => c.id == carId);
-            const contact = document.getElementById('td-contact').value;
-            const date = document.getElementById('td-date').value;
-
-            try {
-                await window.FB_FNS.addDoc(window.FB_FNS.collection(window.FB_DB, "leads"), {
-                    type: 'ทดลองขับ',
-                    date: new Date().toLocaleDateString('th-TH'),
-                    contact: `${contact} (นัด ${date})`,
-                    carName: car ? car.name : '-',
-                    carPrice: car ? car.price : 0,
-                    gpAmount: car ? (car.price * 0.03) : 0
-                });
-                alert('บันทึกนัดหมายทดลองขับสำเร็จ!');
-                e.target.reset();
-                switchTab('admin');
-            } catch (err) { alert('Database Error: ' + err.message); }
-        }
-
-        async function fetchLeadsFromFirebase() {
-            const tbody = document.getElementById('leads-table-body');
-            if(!tbody) return;
-            tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">กำลังโหลดข้อมูลจาก Cloud...</td></tr>`;
-
-            try {
-                const querySnapshot = await window.FB_FNS.getDocs(window.FB_FNS.collection(window.FB_DB, "leads"));
-                let leads = [];
-                querySnapshot.forEach((docSnap) => {
-                    leads.push({ id: docSnap.id, ...docSnap.data() });
-                });
-
-                if(leads.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">ยังไม่มีข้อมูลในระบบ Cloud</td></tr>`;
-                    document.getElementById('summary-total-leads').innerText = '0 เคส';
-                    document.getElementById('summary-total-value').innerText = '0 THB';
-                    document.getElementById('summary-total-gp').innerText = '0 THB';
-                    return;
-                }
-
-                let totalVal = 0;
-                let totalGP = 0;
-
-                tbody.innerHTML = leads.map(l => {
-                    totalVal += l.carPrice || 0;
-                    totalGP += l.gpAmount || 0;
-                    return `
-                        <tr class="hover:bg-slate-700/50">
-                            <td class="p-3 font-bold text-blue-400">${l.type}</td>
-                            <td class="p-3 text-slate-400">${l.date}</td>
-                            <td class="p-3 text-white">${l.contact}</td>
-                            <td class="p-3">${l.carName}</td>
-                            <td class="p-3 font-medium text-slate-200">${l.carPrice ? l.carPrice.toLocaleString() + ' THB' : '-'}</td>
-                            <td class="p-3 font-extrabold text-amber-400">${l.gpAmount ? l.gpAmount.toLocaleString() + ' THB' : '-'}</td>
-                            <td class="p-3"><button onclick="deleteLead('${l.id}')" class="text-rose-400 hover:underline">ลบ</button></td>
-                        </tr>
-                    `;
-                }).join('');
-
-                document.getElementById('summary-total-leads').innerText = `${leads.length} เคส`;
-                document.getElementById('summary-total-value').innerText = `${totalVal.toLocaleString()} THB`;
-                document.getElementById('summary-total-gp').innerText = `${totalGP.toLocaleString()} THB`;
-            } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-rose-500">โหลดข้อมูลไม่สำเร็จ: กรุณาตรวจสอบ Firebase Config หรือ Firestore Rules</td></tr>`;
+            } catch (error) {
+                alert('เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
             }
-        }
+        };
 
-        async function deleteLead(id) {
-            if(confirm('ต้องการลบข้อมูลนี้ออกจาก Cloud ใช่หรือไม่?')) {
-                await window.FB_FNS.deleteDoc(window.FB_FNS.doc(window.FB_DB, "leads", id));
-                fetchLeadsFromFirebase();
+        window.handleResetPassword = async function() {
+            const email = document.getElementById('auth-email').value;
+            if(!email) {
+                alert('กรุณากรอกอีเมลของคุณในช่องอีเมลก่อนกดขอรีเซ็ตรหัสผ่าน');
+                return;
             }
-        }
+            try {
+                await window.sendPasswordResetEmail(window.firebaseAuth, email);
+                alert('ระบบได้ส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปที่อีเมล ' + email + ' แล้ว กรุณาตรวจสอบกล่องข้อความของคุณ');
+            } catch (error) {
+                alert('ไม่สามารถส่งอีเมลรีเซ็ตได้: ' + error.message);
+            }
+        };
 
-        // Init
-        renderCars(CAR_DATA);
-        populateSelects();
+        window.handleLogout = async function() {
+            try {
+                await window.signOut(window.firebaseAuth);
+                alert('ออกจากระบบเรียบร้อย');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        };
     </script>
 </body>
 </html>
+
 
 
 
