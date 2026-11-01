@@ -3,82 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carmarket Place - ศูนย์รวมรถยนต์คัดเกรด & สินเชื่อ</title>
+    <title>Carmarket Place - ศูนย์รวมรถยนต์คัดเกรด & สินเชื่อครบวงจร</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
 
-    <!-- Header & Navigation -->
-    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <!-- Auth Overlay (Login / Signup / Forgot Password) -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
+            <div class="text-center">
+                <i class="fa-solid fa-car-side text-4xl text-blue-500 mb-2"></i>
+                <h2 id="auth-title" class="text-2xl font-bold text-white">เข้าสู่ระบบ Carmarket Place</h2>
+                <p class="text-xs text-slate-400 mt-1">จัดการรถยนต์ สินเชื่อ และนัดหมายของคุณได้ในที่เดียว</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">อีเมล</label>
+                    <input type="email" id="login-email" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">รหัสผ่าน</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <button type="button" onclick="switchAuthMode('forgot')" class="text-blue-400 hover:underline">ลืมรหัสผ่าน?</button>
+                    <button type="button" onclick="switchAuthMode('signup')" class="text-slate-300 hover:text-white">ยังไม่มีบัญชี? สมัครสมาชิก</button>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-blue-600/30">เข้าสู่ระบบ</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="form-signup" onsubmit="handleSignup(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อ-นามสกุล</label>
+                    <input type="text" id="signup-name" required placeholder="พลภัทร พุ่มแก้ว" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">อีเมล</label>
+                    <input type="email" id="signup-email" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">รหัสผ่าน</label>
+                    <input type="password" id="signup-password" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                </div>
+                <div class="text-right text-xs">
+                    <button type="button" onclick="switchAuthMode('login')" class="text-blue-400 hover:underline">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</button>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-emerald-600/30">สมัครสมาชิก</button>
+            </form>
+
+            <!-- Forgot Password Form -->
+            <form id="form-forgot" onsubmit="handleForgot(event)" class="space-y-4 hidden">
+                <p class="text-xs text-slate-300 text-center">กรอกอีเมลของคุณเพื่อรับลิงก์สำหรับรีเซ็ตรหัสผ่านใหม่</p>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">อีเมลที่ลงทะเบียน</label>
+                    <input type="email" id="forgot-email" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                </div>
+                <div class="text-right text-xs">
+                    <button type="button" onclick="switchAuthMode('login')" class="text-blue-400 hover:underline">กลับไปหน้าเข้าสู่ระบบ</button>
+                </div>
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-amber-600/30">ส่งลิงก์รีเซ็ตรหัสผ่าน</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header & 7 Professional Menus -->
+    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('cars')">
                 <i class="fa-solid font-bold text-2xl text-blue-500 fa-car-side"></i>
-                <span class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Carmarket Place</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Carmarket Place</span>
             </div>
-            <nav class="flex items-center space-x-1 sm:space-x-2">
-                <button onclick="switchTab('cars')" id="btn-cars" class="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-blue-600 text-white">
-                    <i class="fa-solid fa-car mr-1"></i> เลือกรถ
-                </button>
-                <button onclick="switchTab('finance')" id="btn-finance" class="px-3 py-1.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700">
-                    <i class="fa-solid fa-calculator mr-1"></i> สินเชื่อ
-                </button>
-                <button onclick="switchTab('admin')" id="btn-admin" class="px-3 py-1.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700 relative">
-                    <i class="fa-solid fa-shield-halved mr-1 text-amber-400"></i> แอดมิน
-                </button>
+            
+            <!-- 7 Professional Navigation Menus -->
+            <nav class="hidden lg:flex items-center space-x-1">
+                <button onclick="switchTab('cars')" id="btn-cars" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white"><i class="fa-solid fa-car mr-1"></i> โชว์รูมรถ</button>
+                <button onclick="switchTab('finance')" id="btn-finance" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-calculator mr-1"></i> สินเชื่อ</button>
+                <button onclick="switchTab('tradein')" id="btn-tradein" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-rotate mr-1"></i> ประเมินเทิร์นรถ</button>
+                <button onclick="switchTab('testdrive')" id="btn-testdrive" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-road mr-1"></i> นัดทดลองขับ</button>
+                <button onclick="switchTab('insurance')" id="btn-insurance" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-shield-heart mr-1"></i> ประกันภัย</button>
+                <button onclick="switchTab('reviews')" id="btn-reviews" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-star mr-1"></i> รีวิว</button>
+                <button onclick="switchTab('contact')" id="btn-contact" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-envelope mr-1"></i> ติดต่อเรา</button>
+                <button onclick="switchTab('admin')" id="btn-admin" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-shield-halved text-amber-400 mr-1"></i> แอดมิน</button>
             </nav>
+
+            <div class="flex items-center space-x-2">
+                <span id="user-display" class="text-xs text-slate-300 hidden sm:inline"></span>
+                <button id="auth-action-btn" onclick="openAuthModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">เข้าสู่ระบบ</button>
+            </div>
+        </div>
+        <!-- Mobile Menu Bar -->
+        <div class="lg:hidden flex overflow-x-auto px-4 py-2 bg-slate-900 border-t border-slate-700 space-x-2 text-xs">
+            <button onclick="switchTab('cars')" id="mbtn-cars" class="whitespace-nowrap px-3 py-1 rounded bg-blue-600 text-white">โชว์รูม</button>
+            <button onclick="switchTab('finance')" id="mbtn-finance" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">สินเชื่อ</button>
+            <button onclick="switchTab('tradein')" id="mbtn-tradein" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">เทิร์นรถ</button>
+            <button onclick="switchTab('testdrive')" id="mbtn-testdrive" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">ทดลองขับ</button>
+            <button onclick="switchTab('insurance')" id="mbtn-insurance" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">ประกันภัย</button>
+            <button onclick="switchTab('reviews')" id="mbtn-reviews" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">รีวิว</button>
+            <button onclick="switchTab('contact')" id="mbtn-contact" class="whitespace-nowrap px-3 py-1 rounded text-slate-300 bg-slate-800">ติดต่อ</button>
+            <button onclick="switchTab('admin')" id="mbtn-admin" class="whitespace-nowrap px-3 py-1 rounded text-amber-400 bg-slate-800">แอดมิน</button>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
 
-        <!-- TAB 1: SHOWROOM -->
+        <!-- 1. SHOWROOM (10 Cars) -->
         <section id="tab-cars" class="space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700">
                 <div>
-                    <h1 class="text-xl font-bold text-white"><i class="fa-solid fa-wand-magic-sparkles text-blue-400 mr-2"></i>รถยนต์คัดเกรดแนะนำ</h1>
-                    <p class="text-xs text-slate-400">รถสวย สภาพดี ผ่านการตรวจเช็กเรียบร้อย พร้อมบริการไฟแนนซ์</p>
+                    <h1 class="text-xl font-bold text-white"><i class="fa-solid fa-car text-blue-400 mr-2"></i>คลังรถยนต์คัดเกรดพรีเมียม (10 คัน)</h1>
+                    <p class="text-xs text-slate-400">รถสวย สภาพดี ตรวจสอบ 200 จุด พร้อมบริการไฟแนนซ์ครบวงจร</p>
                 </div>
                 <div class="flex w-full sm:w-auto gap-2">
-                    <input type="text" id="search-input" onkeyup="filterCars()" placeholder="ค้นหารุ่นรถ..." class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm w-full sm:w-48 text-slate-200 focus:outline-none focus:border-blue-500">
-                    <select id="type-filter" onchange="filterCars()" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    <input type="text" id="search-input" onkeyup="filterCars()" placeholder="ค้นหารุ่นรถ..." class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm w-full sm:w-48 text-slate-200">
+                    <select id="type-filter" onchange="filterCars()" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200">
                         <option value="all">ทุกประเภท</option>
                         <option value="sedan">Sedan</option>
                         <option value="suv">SUV</option>
+                        <option value="ev">EV / Hybrid</option>
+                        <option value="truck">Pickup</option>
                     </select>
                 </div>
             </div>
-
-            <div id="car-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Dynamic Car Cards -->
-            </div>
+            <div id="car-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
-        <!-- TAB 2: FINANCE & APPLICATION -->
-        <section id="tab-finance" class="hidden space-y-6">
-            <div class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                <div class="border-b border-slate-700 pb-4 mb-6">
-                    <h2 class="text-xl font-bold text-white flex items-center">
-                        <i class="fa-solid fa-calculator text-emerald-400 mr-2"></i> ประเมินวงเงิน & คำนวณค่างวด
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-1">คำนวณค่างวดและยื่นขออนุมัติวงเงินเบื้องต้นได้ทันที</p>
-                </div>
-
+        <!-- 2. FINANCE & LOAN CALCULATOR -->
+        <section id="tab-finance" class="hidden space-y-6 max-w-2xl mx-auto">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-calculator text-emerald-400 mr-2"></i>ประเมินวงเงิน & คำนวณค่างวด</h2>
                 <form onsubmit="handleLoanSubmit(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">รุ่นรถที่สนใจ</label>
-                        <select id="loan-car-select" onchange="updateLoanCalc()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white focus:ring-2 focus:ring-blue-500">
-                        </select>
+                        <select id="loan-car-select" onchange="updateLoanCalc()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white"></select>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">เงินดาวน์ (บาท)</label>
                             <input type="number" id="down-payment" value="100000" onchange="updateLoanCalc()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">ระยะเวลาผ่อน (เดือน)</label>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">ผ่อน (เดือน)</label>
                             <select id="loan-months" onchange="updateLoanCalc()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
                                 <option value="48">48 เดือน (4 ปี)</option>
                                 <option value="60">60 เดือน (5 ปี)</option>
@@ -87,74 +156,177 @@
                             </select>
                         </div>
                     </div>
-
-                    <!-- Calculated Monthly Cost -->
-                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 text-center my-4">
-                        <span class="text-xs text-slate-400">ประเมินค่างวดผ่อนชำระต่อเดือน</span>
-                        <div class="text-2xl font-extrabold text-emerald-400 my-1" id="monthly-payment-display">0 THB</div>
-                        <span class="text-[10px] text-slate-500">*อัตราดอกเบี้ยประมาณการณ์ 2.99% ต่อปี</span>
+                    <div class="bg-slate-900 p-4 rounded-xl text-center border border-slate-700">
+                        <span class="text-xs text-slate-400">ค่างวดโดยประมาณต่อเดือน</span>
+                        <div class="text-2xl font-extrabold text-emerald-400 mt-1" id="monthly-payment-display">0 THB</div>
                     </div>
-
-                    <hr class="border-slate-700 my-4">
-
                     <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อ-นามสกุล ผู้ขอสินเชื่อ</label>
-                        <input type="text" id="applicant-name" required placeholder="เช่น สมชาย ใจดี" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                        <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อ-นามสกุล</label>
+                        <input type="text" id="loan-name" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">เบอร์โทรศัพท์ติดต่อ</label>
-                            <input type="tel" id="applicant-phone" required placeholder="0812345678" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">เบอร์โทรศัพท์</label>
+                            <input type="tel" id="loan-phone" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">รายได้ต่อเดือน (บาท)</label>
-                            <input type="number" id="applicant-income" required placeholder="35000" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                            <input type="number" id="loan-income" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
                         </div>
                     </div>
-
-                    <div class="flex items-start space-x-2 pt-2">
-                        <input type="checkbox" id="pdpa-check" required class="mt-1 rounded border-slate-700 bg-slate-900 text-blue-600">
-                        <label for="pdpa-check" class="text-xs text-slate-400">ยินยอมให้จัดเก็บและเปิดเผยข้อมูลส่วนบุคคลเพื่อการประเมินสินเชื่อตามนโยบาย PDPA</label>
+                    <div class="flex items-center space-x-2 text-xs text-slate-400">
+                        <input type="checkbox" required class="rounded bg-slate-900 border-slate-600">
+                        <span>ยอมรับนโยบายความเป็นส่วนตัวและ PDPA เพื่อยื่นขอสินเชื่อ</span>
                     </div>
-
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-blue-600/30">
-                        ส่งข้อมูลยื่นขออนุมัติ
-                    </button>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-medium transition">ยื่นขออนุมัติสินเชื่อ</button>
                 </form>
             </div>
         </section>
 
-        <!-- TAB 3: ADMIN LEADS -->
+        <!-- 3. TRADE-IN EVALUATION -->
+        <section id="tab-tradein" class="hidden space-y-6 max-w-2xl mx-auto">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-rotate text-purple-400 mr-2"></i>ประเมินราคาเทิร์นรถเก่า</h2>
+                <form onsubmit="handleTradeInSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">ยี่ห้อ / รุ่นรถยนต์เดิมของคุณ</label>
+                        <input type="text" id="ti-model" required placeholder="เช่น Honda Civic ปี 2018" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">ปีที่ผลิต (Model Year)</label>
+                            <input type="number" id="ti-year" required placeholder="2018" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">เลขไมล์ (กม.)</label>
+                            <input type="number" id="ti-mileage" required placeholder="85000" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อและเบอร์โทรติดต่อกลับ</label>
+                        <input type="text" id="ti-contact" required placeholder="สมชาย / 0812345678" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-medium transition">ประเมินราคารับซื้อทันที</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 4. TEST DRIVE SCHEDULING -->
+        <section id="tab-testdrive" class="hidden space-y-6 max-w-2xl mx-auto">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-road text-amber-400 mr-2"></i>นัดหมายทดลองขับ</h2>
+                <form onsubmit="handleTestDriveSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">เลือกรุ่นรถที่ต้องการทดลองขับ</label>
+                        <select id="td-car-select" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white"></select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">วันที่ต้องการเข้าชม</label>
+                            <input type="date" id="td-date" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">ช่วงเวลา</label>
+                            <select id="td-time" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                                <option>10:00 - 12:00 น.</option>
+                                <option>13:00 - 15:00 น.</option>
+                                <option>15:00 - 17:00 น.</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อและเบอร์โทรผู้จอง</label>
+                        <input type="text" id="td-contact" required placeholder="สมชาย / 0812345678" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white">
+                    </div>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-medium transition">ยืนยันการนัดหมาย</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 5. INSURANCE COMPARISON -->
+        <section id="tab-insurance" class="hidden space-y-6 max-w-3xl mx-auto">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-shield-heart text-rose-400 mr-2"></i>ประกันภัยรถยนต์ชั้นนำ</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center space-y-3">
+                        <h3 class="font-bold text-white">ประกันชั้น 1 พรีเมียม</h3>
+                        <p class="text-rose-400 font-extrabold text-lg">15,900 THB/ปี</p>
+                        <p class="text-xs text-slate-400">คุ้มครองครบถ้วน รถหาย ไฟไหม้ ชนมี/ไม่มีคู่กรณี</p>
+                        <button onclick="alert('เลือกแผนประกันชั้น 1 เรียบร้อย เจ้าหน้าที่ติดต่อกลับ')" class="w-full bg-rose-600 text-white py-2 rounded-lg text-xs">เลือกแผนนี้</button>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-blue-500 text-center space-y-3 relative">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full">ยอดนิยม</span>
+                        <h3 class="font-bold text-white">ประกันชั้น 2+</h3>
+                        <p class="text-blue-400 font-extrabold text-lg">7,900 THB/ปี</p>
+                        <p class="text-xs text-slate-400">คุ้มครองรถชนรถ หาย ไฟไหม้ ประหยัดคุ้มค่า</p>
+                        <button onclick="alert('เลือกแผนประกันชั้น 2+ เรียบร้อย เจ้าหน้าที่ติดต่อกลับ')" class="w-full bg-blue-600 text-white py-2 rounded-lg text-xs">เลือกแผนนี้</button>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center space-y-3">
+                        <h3 class="font-bold text-white">ประกันชั้น 3+</h3>
+                        <p class="text-emerald-400 font-extrabold text-lg">5,900 THB/ปี</p>
+                        <p class="text-xs text-slate-400">คุ้มครองคู่กรณีและซ่อมรถเราเฉพาะกรณีชนกับรถยนต์</p>
+                        <button onclick="alert('เลือกแผนประกันชั้น 3+ เรียบร้อย เจ้าหน้าที่ติดต่อกลับ')" class="w-full bg-emerald-600 text-white py-2 rounded-lg text-xs">เลือกแผนนี้</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. CUSTOMER REVIEWS -->
+        <section id="tab-reviews" class="hidden space-y-6 max-w-4xl mx-auto">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-star text-amber-400 mr-2"></i>ความประทับใจจากลูกค้าจริง</h2>
+                    <span class="text-amber-400 text-sm font-bold"><i class="fa-solid fa-star"></i> 4.9 / 5.0 (จาก 320 รีวิว)</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span class="font-bold text-white">คุณณัฐพล (ซื้อ Toyota Camry)</span>
+                            <span>⭐ 5/5</span>
+                        </div>
+                        <p class="text-xs text-slate-300">"บริการรวดเร็วมากครับ รถสภาพสวยเหมือนป้ายแดง ไฟแนนซ์อนุมัติไว ประทับใจมากครับ"</p>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span class="font-bold text-white">คุณกanyarat (บริการเทิร์นรถ)</span>
+                            <span>⭐ 5/5</span>
+                        </div>
+                        <p class="text-xs text-slate-300">"ให้ราคารับซื้อเทิร์นรถคันเก่าสูงกว่าที่อื่น สะดวกและเจ้าหน้าที่เป็นกันเองมากๆ"</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. CONTACT US -->
+        <section id="tab-contact" class="hidden space-y-6 max-w-2xl mx-auto">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-envelope text-blue-400 mr-2"></i>ติดต่อเรา</h2>
+                <div class="space-y-3 text-sm text-slate-300">
+                    <p><i class="fa-solid fa-location-dot text-rose-400 mr-2"></i> โชว์รูมหลัก: อ.เมืองจันทบุรี จ.จันทบุรี 22000</p>
+                    <p><i class="fa-solid fa-phone text-emerald-400 mr-2"></i> โทรด่วน: 081-234-5678, 039-xxx-xxx</p>
+                    <p><i class="fa-solid fa-clock text-amber-400 mr-2"></i> เวลาทำการ: เปิดให้บริการทุกวัน 08:30 - 18:00 น.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN LEADS -->
         <section id="tab-admin" class="hidden space-y-6">
             <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-white flex items-center">
-                            <i class="fa-solid fa-users text-amber-400 mr-2"></i> รายชื่อผู้สนใจยื่นสินเชื่อ (Admin)
-                        </h2>
-                        <p class="text-xs text-slate-400">ข้อมูลที่ถูกส่งเข้ามาจากแบบฟอร์ม (บันทึกเฉพาะในอุปกรณ์นี้)</p>
-                    </div>
-                    <button onclick="clearLeads()" class="text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-lg">
-                        <i class="fa-solid fa-trash mr-1"></i> ล้างข้อมูลทั้งหมด
-                    </button>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-users text-amber-400 mr-2"></i>ข้อมูลผู้ติดต่อ & สินเชื่อทั้งหมด (Admin)</h2>
+                    <button onclick="clearLeads()" class="text-xs text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-lg">ล้างข้อมูล</button>
                 </div>
-
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-900 text-xs text-slate-400 uppercase">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900 uppercase text-slate-400">
                             <tr>
+                                <th class="p-3">ประเภท</th>
                                 <th class="p-3">วันที่</th>
-                                <th class="p-3">ชื่อ-นามสกุล</th>
-                                <th class="p-3">เบอร์โทร</th>
-                                <th class="p-3">รุ่นรถที่สนใจ</th>
-                                <th class="p-3">รายได้/เดือน</th>
-                                <th class="p-3">ผ่อนชำระ/เดือน</th>
+                                <th class="p-3">ชื่อ-เบอร์โทร</th>
+                                <th class="p-3">รายละเอียด</th>
                             </tr>
                         </thead>
-                        <tbody id="leads-table-body" class="divide-y divide-slate-700">
-                            <!-- Dynamic Table Content -->
-                        </tbody>
+                        <tbody id="leads-table-body" class="divide-y divide-slate-700"></tbody>
                     </table>
                 </div>
             </div>
@@ -162,51 +334,87 @@
 
     </main>
 
-    <!-- Modal Detail -->
+    <!-- Modal Detail Car -->
     <div id="car-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 relative space-y-4">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">&times;</button>
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 text-xl">&times;</button>
             <img id="modal-img" src="" class="w-full h-48 object-cover rounded-xl">
             <h3 id="modal-title" class="text-xl font-bold text-white"></h3>
             <p id="modal-price" class="text-lg font-bold text-blue-400"></p>
-            <p id="modal-desc" class="text-sm text-slate-300"></p>
-            <button id="modal-loan-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition">
-                สนใจขอสินเชื่อคันนี้
-            </button>
+            <p id="modal-desc" class="text-xs text-slate-300"></p>
+            <button id="modal-loan-btn" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-xs font-medium">สนใจขอสินเชื่อคันนี้</button>
         </div>
     </div>
+
+    <!-- Footer with Developer & Home Info -->
+    <footer class="bg-slate-950 border-t border-slate-800 mt-12 py-10 text-slate-400 text-sm">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <div class="flex items-center space-x-2 mb-3">
+                    <i class="fa-solid fa-car-side text-2xl text-blue-500"></i>
+                    <span class="text-lg font-bold text-white">Carmarket Place</span>
+                </div>
+                <p class="text-xs text-slate-400">แพลตฟอร์มซื้อขายรถยนต์คัดเกรดและบริการสินเชื่อออนไลน์ที่ได้มาตรฐาน</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 flex items-center"><i class="fa-solid fa-code text-blue-400 mr-2"></i> ผู้สร้างแพลตฟอร์ม</h4>
+                <p class="text-xs text-slate-400">พัฒนาและออกแบบระบบโดย <strong class="text-slate-200">พลภัทร พุ่มแก้ว</strong> มุ่งมั่นสร้างสรรค์นวัตกรรมดิจิทัลเพื่อผู้ใช้งาน</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 flex items-center"><i class="fa-solid fa-house text-emerald-400 mr-2"></i> ที่ตั้งสำนักงาน & บ้าน</h4>
+                <ul class="text-xs text-slate-400 space-y-2">
+                    <li><i class="fa-solid fa-location-dot mr-2 text-rose-400"></i> อ.เมืองจันทบุรี จ.จันทบุรี 22000</li>
+                    <li><i class="fa-solid clock mr-2 text-amber-400"></i> เปิดบริการทุกวัน 08:30 - 18:00 น.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-slate-800/80 mt-8 pt-6 text-center text-xs text-slate-500">
+            © 2026 Carmarket Place. Created with passion by PholPhat. All rights reserved.
+        </div>
+    </footer>
 
     <!-- Script Application Logic -->
     <script>
         const CAR_DATA = [
-            { id: 1, name: 'Toyota Camry 2.5 HV', type: 'sedan', price: 890000, img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&auto=format&fit=crop&q=60', desc: 'รถซีดานหรูสภาพป้ายแดง ประหยัดน้ำมันด้วยระบบไฮบริด พร้อมใช้งาน ออปชั่นเต็ม' },
-            { id: 2, name: 'Honda Civic 1.5 RS', type: 'sedan', price: 750000, img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=60', desc: 'ดีไซน์สปอร์ต เครื่องยนต์เทอร์โบแรงเร้าใจ เบาะหนัง ปรับไฟฟ้า จอ Touchscreen' },
-            { id: 3, name: 'BMW 330e M Sport', type: 'sedan', price: 1490000, img: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&auto=format&fit=crop&q=60', desc: 'รถยุโรปสปอร์ตสุดหรู Plug-in Hybrid ขับสนุก ประวัติเช็กศูนย์ตลอด' },
-            { id: 4, name: 'Ford Everest 2.0 Bi-Turbo', type: 'suv', price: 1150000, img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=60', desc: 'SUV 7 ที่นั่งสายลุย ล้อแม็กแต่ง ลุยได้ทุกสถานการณ์ ถุงลมรอบคัน' }
+            { id: 1, name: 'Toyota Camry 2.5 HV', type: 'sedan', price: 890000, img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&auto=format&fit=crop&q=60', desc: 'รถซีดานหรูสภาพป้ายแดง ประหยัดน้ำมันด้วยระบบไฮบริด' },
+            { id: 2, name: 'Honda Civic 1.5 RS', type: 'sedan', price: 750000, img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=60', desc: 'ดีไซน์สปอร์ต เครื่องยนต์เทอร์โบแรงเร้าใจ' },
+            { id: 3, name: 'BMW 330e M Sport', type: 'sedan', price: 1490000, img: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&auto=format&fit=crop&q=60', desc: 'รถยุโรปสปอร์ตสุดหรู Plug-in Hybrid ขับสนุก' },
+            { id: 4, name: 'Ford Everest 2.0 Bi-Turbo', type: 'suv', price: 1150000, img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=60', desc: 'SUV 7 ที่นั่งสายลุย ล้อแม็กแต่ง ลุยได้ทุกสถานการณ์' },
+            { id: 5, name: 'Isuzu D-Max V-Cross 4x4', type: 'truck', price: 850000, img: 'https://images.unsplash.com/photo-1553440569-bcc63803a83d?w=800&auto=format&fit=crop&q=60', desc: 'กระบะพันธุ์แกร่ง ขับเคลื่อน 4 ล้อ ช่วงล่างแน่นหนึบ' },
+            { id: 6, name: 'Mazda CX-5 2.2 XDL', type: 'suv', price: 920000, img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c351?w=800&auto=format&fit=crop&q=60', desc: 'ครอสโอเวอร์พรีเมียม ดีไซน์โฉบเฉี่ยว เครื่องดีเซลแรงประหยัด' },
+            { id: 7, name: 'Mercedes-Benz C220d', type: 'sedan', price: 1390000, img: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&auto=format&fit=crop&q=60', desc: 'ยลโฉมความหรูหราเหนือระดับ สมรรถนะยอดเยี่ยม' },
+            { id: 8, name: 'MG 4 Electric', type: 'ev', price: 599000, img: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=60', desc: 'EV แฮทช์แบ็ครุ่นยอดฮิต ขับเคลื่อนล้อหลัง คล่องตัวสูง' },
+            { id: 9, name: 'Tesla Model 3 Standard', type: 'ev', price: 1290000, img: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&auto=format&fit=crop&q=60', desc: 'รถไฟฟ้ายอดนิยม เทคโนโลยีล้ำสมัย ขับขี่อัจฉริยะ' },
+            { id: 10, name: 'Nissan Kicks e-POWER', type: 'ev', price: 550000, img: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&auto=format&fit=crop&q=60', desc: 'ขับเคลื่อนด้วยไฟฟ้า 100% โดยไม่ต้องชาร์จแบตเตอรี่' }
         ];
 
         function switchTab(tab) {
-            ['cars', 'finance', 'admin'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`btn-${t}`).className = 'px-3 py-1.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700';
+            ['cars', 'finance', 'tradein', 'testdrive', 'insurance', 'reviews', 'contact', 'admin'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if(el) el.classList.add('hidden');
+                const btn = document.getElementById(`btn-${t}`);
+                if(btn) btn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-700';
             });
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
-            document.getElementById(`btn-${tab}`).className = 'px-3 py-1.5 rounded-lg text-sm font-medium transition bg-blue-600 text-white';
+            const target = document.getElementById(`tab-${tab}`);
+            if(target) target.classList.remove('hidden');
+            const targetBtn = document.getElementById(`btn-${tab}`);
+            if(targetBtn) targetBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white';
             
             if(tab === 'admin') renderLeads();
         }
 
         function renderCars(cars) {
             const container = document.getElementById('car-list');
+            if(!container) return;
             container.innerHTML = cars.map(car => `
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden hover:border-slate-500 transition shadow-lg flex flex-col">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-lg flex flex-col">
                     <img src="${car.img}" class="h-48 w-full object-cover">
                     <div class="p-4 flex-grow flex flex-col justify-between space-y-3">
                         <div>
-                            <h3 class="font-bold text-lg text-white">${car.name}</h3>
-                            <p class="text-blue-400 font-extrabold text-base">${car.price.toLocaleString()} THB</p>
+                            <h3 class="font-bold text-white">${car.name}</h3>
+                            <p class="text-blue-400 font-extrabold">${car.price.toLocaleString()} THB</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 pt-2">
+                        <div class="grid grid-cols-2 gap-2">
                             <button onclick="openModal(${car.id})" class="bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-lg text-slate-200">รายละเอียด</button>
                             <button onclick="selectCarForLoan(${car.id})" class="bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded-lg text-white">ขอสินเชื่อ</button>
                         </div>
@@ -218,17 +426,16 @@
         function filterCars() {
             const search = document.getElementById('search-input').value.toLowerCase();
             const type = document.getElementById('type-filter').value;
-            const filtered = CAR_DATA.filter(car => {
-                const matchSearch = car.name.toLowerCase().includes(search);
-                const matchType = type === 'all' || car.type === type;
-                return matchSearch && matchType;
-            });
+            const filtered = CAR_DATA.filter(car => car.name.toLowerCase().includes(search) && (type === 'all' || car.type === type));
             renderCars(filtered);
         }
 
-        function populateCarSelect() {
-            const select = document.getElementById('loan-car-select');
-            select.innerHTML = CAR_DATA.map(c => `<option value="${c.id}">${c.name} (${c.price.toLocaleString()} THB)</option>`).join('');
+        function populateSelects() {
+            const loanSelect = document.getElementById('loan-car-select');
+            const tdSelect = document.getElementById('td-car-select');
+            const options = CAR_DATA.map(c => `<option value="${c.id}">${c.name} (${c.price.toLocaleString()} THB)</option>`).join('');
+            if(loanSelect) loanSelect.innerHTML = options;
+            if(tdSelect) tdSelect.innerHTML = options;
             updateLoanCalc();
         }
 
@@ -236,15 +443,12 @@
             const carId = document.getElementById('loan-car-select').value;
             const car = CAR_DATA.find(c => c.id == carId);
             if(!car) return;
-
             const down = parseFloat(document.getElementById('down-payment').value) || 0;
             const months = parseInt(document.getElementById('loan-months').value);
             const principal = Math.max(0, car.price - down);
-            const interestRate = 0.0299; // 2.99% per year
-            const totalInterest = principal * interestRate * (months / 12);
-            const monthlyPayment = (principal + totalInterest) / months;
-
-            document.getElementById('monthly-payment-display').innerText = `${Math.round(monthlyPayment).toLocaleString()} THB`;
+            const monthly = (principal + (principal * 0.0299 * (months / 12))) / months;
+            const display = document.getElementById('monthly-payment-display');
+            if(display) display.innerText = `${Math.round(monthly).toLocaleString()} THB`;
         }
 
         function selectCarForLoan(id) {
@@ -268,25 +472,82 @@
             document.getElementById('car-modal').classList.add('hidden');
         }
 
+        // Auth Logic
+        function openAuthModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
+        function switchAuthMode(mode) {
+            ['login', 'signup', 'forgot'].forEach(m => document.getElementById(`form-${m}`).classList.add('hidden'));
+            document.getElementById(`form-${mode}`).classList.remove('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            localStorage.setItem('carmarket_user', email);
+            alert('เข้าสู่ระบบสำเร็จ!');
+            document.getElementById('auth-modal').classList.add('hidden');
+            checkUserSession();
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            localStorage.setItem('carmarket_user', email);
+            alert('สมัครสมาชิกสำเร็จ!');
+            document.getElementById('auth-modal').classList.add('hidden');
+            checkUserSession();
+        }
+
+        function handleForgot(e) {
+            e.preventDefault();
+            alert('ระบบได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว');
+            switchAuthMode('login');
+        }
+
+        function checkUserSession() {
+            const user = localStorage.getItem('carmarket_user');
+            if(user) {
+                document.getElementById('user-display').innerText = user;
+                document.getElementById('auth-action-btn').innerText = 'ออกจากระบบ';
+                document.getElementById('auth-action-btn').onclick = () => {
+                    localStorage.removeItem('carmarket_user');
+                    location.reload();
+                };
+            }
+        }
+
+        // Lead Forms Submission
+        function saveLead(type, detail) {
+            const leads = JSON.parse(localStorage.getItem('carmarket_leads') || '[]');
+            leads.unshift({ type, date: new Date().toLocaleDateString('th-TH'), detail });
+            localStorage.setItem('carmarket_leads', JSON.stringify(leads));
+        }
+
         function handleLoanSubmit(e) {
             e.preventDefault();
-            const carId = document.getElementById('loan-car-select').value;
-            const car = CAR_DATA.find(c => c.id == carId);
-            
-            const newLead = {
-                date: new Date().toLocaleDateString('th-TH'),
-                name: document.getElementById('applicant-name').value,
-                phone: document.getElementById('applicant-phone').value,
-                carName: car ? car.name : '-',
-                income: parseFloat(document.getElementById('applicant-income').value).toLocaleString(),
-                monthly: document.getElementById('monthly-payment-display').innerText
-            };
+            const name = document.getElementById('loan-name').value;
+            const phone = document.getElementById('loan-phone').value;
+            saveLead('ขอสินเชื่อ', `${name} (${phone})`);
+            alert('ส่งข้อมูลขอสินเชื่อเรียบร้อย!');
+            e.target.reset();
+            switchTab('admin');
+        }
 
-            const leads = JSON.parse(localStorage.getItem('carmarket_leads') || '[]');
-            leads.unshift(newLead);
-            localStorage.setItem('carmarket_leads', JSON.stringify(leads));
+        function handleTradeInSubmit(e) {
+            e.preventDefault();
+            const model = document.getElementById('ti-model').value;
+            const contact = document.getElementById('ti-contact').value;
+            saveLead('เทิร์นรถ', `${model} - ${contact}`);
+            alert('ส่งข้อมูลประเมินราคาเรียบร้อย!');
+            e.target.reset();
+            switchTab('admin');
+        }
 
-            alert('ยื่นข้อมูลขอสินเชื่อเรียบร้อยแล้ว! เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด');
+        function handleTestDriveSubmit(e) {
+            e.preventDefault();
+            const contact = document.getElementById('td-contact').value;
+            const date = document.getElementById('td-date').value;
+            saveLead('ทดลองขับ', `${contact} วันที่ ${date}`);
+            alert('บันทึกการนัดหมายทดลองขับเรียบร้อย!');
             e.target.reset();
             switchTab('admin');
         }
@@ -294,76 +555,34 @@
         function renderLeads() {
             const leads = JSON.parse(localStorage.getItem('carmarket_leads') || '[]');
             const tbody = document.getElementById('leads-table-body');
+            if(!tbody) return;
             if(leads.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">ยังไม่มีข้อมูลการยื่นขอสินเชื่อ</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">ยังไม่มีข้อมูล</td></tr>`;
                 return;
             }
             tbody.innerHTML = leads.map(l => `
                 <tr class="hover:bg-slate-700/50">
-                    <td class="p-3 text-xs text-slate-400">${l.date}</td>
-                    <td class="p-3 font-medium text-white">${l.name}</td>
-                    <td class="p-3 text-blue-400">${l.phone}</td>
-                    <td class="p-3">${l.carName}</td>
-                    <td class="p-3">${l.income} THB</td>
-                    <td class="p-3 font-bold text-emerald-400">${l.monthly}</td>
+                    <td class="p-3 font-bold text-blue-400">${l.type}</td>
+                    <td class="p-3 text-slate-400">${l.date}</td>
+                    <td class="p-3 text-white">${l.detail}</td>
+                    <td class="p-3 text-emerald-400">รอดำเนินการ</td>
                 </tr>
             `).join('');
         }
 
         function clearLeads() {
-            if(confirm('คุณต้องการล้างข้อมูลผู้ขอสินเชื่อทั้งหมดใช่หรือไม่?')) {
+            if(confirm('ล้างข้อมูลทั้งหมด?')) {
                 localStorage.removeItem('carmarket_leads');
                 renderLeads();
             }
         }
 
-        // Initialize
+        // Init
         renderCars(CAR_DATA);
-        populateCarSelect();
-    </scrips><!-- Footer Section -->
-<footer class="bg-slate-950 border-t border-slate-800 mt-12 py-10 text-slate-400 text-sm">
-    <div class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        <!-- ข้อมูลแพลตฟอร์ม -->
-        <div>
-            <div class="flex items-center space-x-2 mb-3">
-                <i class="fa-solid fa-car-side text-2xl text-blue-500"></i>
-                <span class="text-lg font-bold text-white">Carmarket Place</span>
-            </div>
-            <p class="text-xs text-slate-400 leading-relaxed">
-                แพลตฟอร์มซื้อขายรถยนต์คัดเกรดคุณภาพ และบริการประเมินสินเชื่อรถยนต์ออนไลน์ที่ครบวงจรที่สุด
-            </p>
-        </div>
-
-        <!-- เกี่ยวกับผู้สร้างแพลตฟอร์ม -->
-        <div>
-            <h4 class="text-white font-bold mb-3 flex items-center">
-                <i class="fa-solid fa-code text-blue-400 mr-2"></i> ผู้สร้างแพลตฟอร์ม
-            </h4>
-            <p class="text-xs text-slate-400 leading-relaxed">
-                พัฒนาและออกแบบระบบโดย <strong class="text-slate-200">พลภัทร พุ่มแก้ว</strong> มุ่งมั่นพัฒนานวัตกรรมเว็บแอปพลิเคชันยุคใหม่เพื่อการใช้งานที่สะดวก รวดเร็ว และปลอดภัย
-            </p>
-        </div>
-
-        <!-- ข้อมูลบ้าน / ที่ตั้งสำนักงาน -->
-        <div>
-            <h4 class="text-white font-bold mb-3 flex items-center">
-                <i class="fa-solid fa-house text-emerald-400 mr-2"></i> ที่ตั้งสำนักงาน & บ้าน
-            </h4>
-            <ul class="text-xs text-slate-400 space-y-2">
-                <li><i class="fa-solid fa-location-dot mr-2 text-rose-400"></i> อ.เมืองจันทบุรี จ.จันทบุรี 22000</li>
-                <li><i class="fa-solid fa-clock mr-2 text-amber-400"></i> เปิดให้บริการ: ทุกวัน 08:30 - 18:00 น.</li>
-                <li><i class="fa-solid fa-envelope mr-2 text-blue-400"></i> ติดต่อผู้พัฒนาผ่านระบบแอดมิน</li>
-            </ul>
-        </div>
-
-    </div>
-
-    <div class="border-t border-slate-800/80 mt-8 pt-6 text-center text-xs text-slate-500">
-        © 2026 Carmarket Place. Created with passion by PholPhat. All rights reserved.
-    </div>
-</footer>
-
+        populateSelects();
+        checkUserSession();
+    </script>
 </body>
 </html>
+
 
