@@ -17,27 +17,26 @@
             }
         }
     </script>
-    <!-- Firebase SDK v9 -->
+    <!-- Firebase SDK v9 (ใส่ค่า Config จริงของคุณพลภัทรแล้ว) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // Firebase Configuration สำหรับโปรเจกต์ car-market-place-db-32318
         const firebaseConfig = {
-            apiKey: "AIzaSyD-Placeholder-Key-For-Demo",
+            apiKey: "AIzaSyBr4HfJZecQ-TNOqY9aAu8cHsi2Yv2lZcg",
             authDomain: "car-market-place-db-32318.firebaseapp.com",
             projectId: "car-market-place-db-32318",
-            storageBucket: "car-market-place-db-32318.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:abcdef"
+            storageBucket: "car-market-place-db-32318.firebasestorage.app",
+            messagingSenderId: "1094434102769",
+            appId: "1:1094434102769:web:640f92e45960ec2263b850",
+            measurementId: "G-6BZDYFG65R"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // นำฟังก์ชันไปผูกกับ Global Window เพื่อให้เรียกใช้ผ่าน HTML ได้
         window.firebaseAuth = auth;
         window.firebaseDb = db;
         window.signInWithEmailAndPassword = signInWithEmailAndPassword;
@@ -65,7 +64,7 @@
                 <span class="text-xs bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">Chanthaburi Hub</span>
             </div>
             
-            <!-- เมนูหลัก 7 เมนู พร้อมระบบ Active State (แสงสีบอกสถานะ) -->
+            <!-- เมนูหลัก 7 เมนู พร้อมระบบ Active State -->
             <nav id="nav-menus" class="flex flex-wrap items-center gap-1.5 md:gap-2">
                 <button onclick="switchTab('home', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20">หน้าแรก</button>
                 <button onclick="switchTab('inventory', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">คลังรถยนต์</button>
@@ -84,7 +83,7 @@
         <!-- 1. หน้าแรก (Home) -->
         <section id="tab-home" class="space-y-6">
             <div class="bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border border-blue-500/30 rounded-2xl p-8 text-center">
-                <h1 class="text-3xl md:text-4xl font-extxl mb-4">ยินดีต้อนรับสู่ Carmarket Place</h1>
+                <h1 class="text-3xl md:text-4xl font-extrabold mb-4">ยินดีต้อนรับสู่ Carmarket Place</h1>
                 <p class="text-slate-300 max-w-2xl mx-auto mb-6">แพลตฟอร์มตลาดรถยนต์มือสองและป้ายแดงมาตรฐานโปรดักชัน รองรับระบบคำนวณกำไร 3% GP และจัดการลีดแบบเรียลไทม์</p>
                 <button onclick="switchTab('inventory', document.querySelectorAll('.nav-btn')[1])" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/30 transition-all">สำรวจคลังรถยนต์</button>
             </div>
@@ -164,7 +163,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm text-slate-400 mb-1">อีเมลของคุณ</label>
-                    <input type="email5" id="auth-email" placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
+                    <input type="email" id="auth-email" placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm text-slate-400 mb-1">รหัสผ่าน (Password)</label>
@@ -187,17 +186,14 @@
 
     </main>
 
-    <!-- Script ควบคุมการทำงานหน้าจอและการสลับแท็บเมนู -->
+    <!-- Script ควบคุมการทำงาน -->
     <script>
         function switchTab(tabId, btnElement) {
-            // ซ่อนทุกหน้าจอ
             ['home', 'inventory', 'finance', 'tradein', 'testdrive', 'admin', 'auth'].forEach(id => {
                 document.getElementById('tab-' + id).classList.add('hidden');
             });
-            // แสดงหน้าจอที่เลือก
             document.getElementById('tab-' + tabId).classList.remove('hidden');
 
-            // ล้างสถานะแสงสีปุ่มทั้งหมด และเปิดแสงสีเฉพาะปุ่มที่กด (Active State)
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.className = "nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white";
             });
@@ -210,7 +206,7 @@
             const price = parseFloat(document.getElementById('fin-price').value) || 0;
             const downPct = parseFloat(document.getElementById('fin-down').value) || 0;
             const loan = price * (1 - downPct / 100);
-            const monthly = (loan * 1.05) / 60; // สมมติ ดอกเบี้ยรวมผ่อน 5 ปี
+            const monthly = (loan * 1.05) / 60;
             document.getElementById('fin-result').innerText = `ยอดจัดสินเชื่อ: ${loan.toLocaleString()} THB | ผ่อนประมาณ ${Math.round(monthly).toLocaleString()} บาท/เดือน (60 งวด)`;
         }
 
@@ -220,7 +216,6 @@
             document.getElementById('gp-result').innerText = `คำนวณ GP 3%: ${gp.toLocaleString()} THB`;
         }
 
-        // Firebase Auth Handlers ที่เชื่อมต่อจริง
         window.handleRegister = async function() {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
@@ -251,7 +246,7 @@
             }
             try {
                 await window.sendPasswordResetEmail(window.firebaseAuth, email);
-                alert('ระบบได้ส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปที่อีเมล ' + email + ' แล้ว กรุณาตรวจสอบกล่องข้อความของคุณ');
+                alert('ระบบได้ส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปที่อีเมล ' + email + ' แล้ว');
             } catch (error) {
                 alert('ไม่สามารถส่งอีเมลรีเซ็ตได้: ' + error.message);
             }
@@ -268,6 +263,7 @@
     </script>
 </body>
 </html>
+
 
 
 
