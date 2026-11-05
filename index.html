@@ -181,7 +181,7 @@
 
     </main>
 
-    <!-- Firebase SDK & Event Listeners (แก้ปัญหาแคชและฟังก์ชันหลุด) -->
+    <!-- Firebase SDK & Event Listeners -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
@@ -210,7 +210,6 @@
             }
         });
 
-        // ผูกปุ่มสมัครสมาชิก
         document.getElementById('btn-register').addEventListener('click', async () => {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
@@ -222,7 +221,6 @@
             }
         });
 
-        // ผูกปุ่มเข้าสู่ระบบ
         document.getElementById('btn-login').addEventListener('click', async () => {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
@@ -234,7 +232,6 @@
             }
         });
 
-        // ผูกปุ่มรีเซ็ตรหัสผ่าน
         document.getElementById('btn-reset').addEventListener('click', async () => {
             const email = document.getElementById('auth-email').value;
             if(!email) {
@@ -249,7 +246,6 @@
             }
         });
 
-        // ผูกปุ่มออกจากระบบ
         document.getElementById('btn-logout').addEventListener('click', async () => {
             try {
                 await signOut(auth);
@@ -259,7 +255,6 @@
             }
         });
 
-        // ผูกปุ่มลงประกาศรถ
         document.getElementById('btn-publish').addEventListener('click', async () => {
             const title = document.getElementById('sell-title').value;
             const price = document.getElementById('sell-price').value;
@@ -325,6 +320,7 @@
     </script>
 </body>
 </html>
+
 
 
 
