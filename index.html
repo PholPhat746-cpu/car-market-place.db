@@ -17,11 +17,11 @@
             }
         }
     </script>
-    <!-- Firebase SDK v9 (ใส่ค่า Config จริงของคุณพลภัทรแล้ว) -->
+    <!-- Firebase SDK v9 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addTimestamp, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBr4HfJZecQ-TNOqY9aAu8cHsi2Yv2lZcg",
@@ -43,20 +43,22 @@
         window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
         window.sendPasswordResetEmail = sendPasswordResetEmail;
         window.signOut = signOut;
+        window.addDoc = addDoc;
+        window.collection = collection;
 
         onAuthStateChanged(auth, (user) => {
             const authStatusEl = document.getElementById('auth-status');
             if (user) {
                 if(authStatusEl) authStatusEl.innerText = `เข้าสู่ระบบแล้ว: ${user.email}`;
             } else {
-                if(authStatusEl) authStatusEl.innerText = 'ยังไม่ได้เข้าสู่ระบบ';
+                if(authStatusEl) authStatusEl.innerText = 'ยังไม่ได้เข้าสู่ระบบ (กรุณาเข้าสู่ระบบก่อนโพสต์ขาย)';
             }
         });
     </script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
-    <!-- Header Navigation (7 Core Menus) -->
+    <!-- Header Navigation (8 Core Menus) -->
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center space-x-2">
@@ -64,15 +66,16 @@
                 <span class="text-xs bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">Chanthaburi Hub</span>
             </div>
             
-            <!-- เมนูหลัก 7 เมนู พร้อมระบบ Active State -->
+            <!-- เมนูหลัก 8 เมนู -->
             <nav id="nav-menus" class="flex flex-wrap items-center gap-1.5 md:gap-2">
                 <button onclick="switchTab('home', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20">หน้าแรก</button>
                 <button onclick="switchTab('inventory', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">คลังรถยนต์</button>
                 <button onclick="switchTab('finance', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">คำนวณสินเชื่อ</button>
                 <button onclick="switchTab('tradein', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">ประเมินเทิร์นรถ</button>
                 <button onclick="switchTab('testdrive', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">จองทดลองขับ</button>
+                <button onclick="switchTab('sellcar', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">ลงประกาศขายรถ</button>
                 <button onclick="switchTab('admin', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">แอดมิน (3% GP)</button>
-                <button onclick="switchTab('auth', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">เข้าสู่ระบบ / สมัครสมาชิก</button>
+                <button onclick="switchTab('auth', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">สมาชิก</button>
             </nav>
         </div>
     </header>
@@ -84,8 +87,11 @@
         <section id="tab-home" class="space-y-6">
             <div class="bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border border-blue-500/30 rounded-2xl p-8 text-center">
                 <h1 class="text-3xl md:text-4xl font-extrabold mb-4">ยินดีต้อนรับสู่ Carmarket Place</h1>
-                <p class="text-slate-300 max-w-2xl mx-auto mb-6">แพลตฟอร์มตลาดรถยนต์มือสองและป้ายแดงมาตรฐานโปรดักชัน รองรับระบบคำนวณกำไร 3% GP และจัดการลีดแบบเรียลไทม์</p>
-                <button onclick="switchTab('inventory', document.querySelectorAll('.nav-btn')[1])" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/30 transition-all">สำรวจคลังรถยนต์</button>
+                <p class="text-slate-300 max-w-2xl mx-auto mb-6">ตลาดรถยนต์มือสองและป้ายแดง ผู้ขายโพสต์ขายเองได้ง่าย มีแอดมินคอยช่วยเหลือและตรวจสอบความถูกต้องแบบเรียลไทม์</p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="switchTab('sellcar', document.querySelectorAll('.nav-btn')[5])" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg transition-all">ลงประกาศขายรถของคุณ</button>
+                    <button onclick="switchTab('inventory', document.querySelectorAll('.nav-btn')[1])" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg transition-all">สำรวจคลังรถ</button>
+                </div>
             </div>
         </section>
 
@@ -142,9 +148,38 @@
             </div>
         </section>
 
-        <!-- 6. แอดมินและคำนวณ GP (Admin) -->
+        <!-- 6. ลงประกาศขายรถสำหรับผู้ขาย (Sell Car Form) -->
+        <section id="tab-sellcar" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h2 class="text-2xl font-bold text-emerald-400">ลงประกาศขายรถยนต์ (ผู้ขาย)</h2>
+                <span class="text-xs bg-emerald-950 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30">มีแอดมินดูแลช่วยเหลือ</span>
+            </div>
+            <p class="text-xs text-slate-400">กรอกข้อมูลรถยนต์และแนบรูปรถเพื่อลงประกาศ ระบบจะบันทึกเข้าฐานข้อมูลเพื่อให้แอดมินช่วยตรวจสอบและอนุมัติขึ้นหน้าเว็บ</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">ยี่ห้อและรุ่นรถ (เช่น Honda Civic RS)</label>
+                    <input type="text" id="sell-title" placeholder="ระบุยี่ห้อ รุ่น และปี" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">ราคาขาย (THB)</label>
+                    <input type="number" id="sell-price" placeholder="เช่น 750000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">ลิงก์รูปภาพรถยนต์ (Image URL)</label>
+                    <input type="url" id="sell-image" placeholder="https://example.com/car-image.jpg" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">เบอร์โทรติดต่อผู้ขาย</label>
+                    <input type="tel" id="sell-contact" placeholder="08x-xxx-xxxx" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500">
+                </div>
+                <button onclick="handlePublishCar()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/30">ส่งประกาศให้แอดมินตรวจสอบ</button>
+            </div>
+        </section>
+
+        <!-- 7. แอดมินและคำนวณ GP (Admin) -->
         <section id="tab-admin" class="hidden space-y-6">
-            <h2 class="text-2xl font-bold">ระบบบริหารจัดการแอดมิน (3% Gross Profit)</h2>
+            <h2 class="text-2xl font-bold">ระบบบริหารจัดการแอดมิน (3% Gross Profit & ตรวจสอบประกาศ)</h2>
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4">
                 <p class="text-sm text-slate-400">คำนวณค่าธรรมเนียม GP 3% อัตโนมัติจากยอดขายลีดหรือราคาปิดการขาย</p>
                 <div class="flex gap-4">
@@ -155,7 +190,7 @@
             </div>
         </section>
 
-        <!-- 7. เข้าสู่ระบบ / สมัครสมาชิก (Auth & Register with Password & Reset) -->
+        <!-- 8. สมาชิก (Auth & Register with Password & Reset) -->
         <section id="tab-auth" class="hidden space-y-6 max-w-md mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
             <h2 class="text-2xl font-bold text-center">ระบบสมาชิก Firebase Auth</h2>
             <div id="auth-status" class="text-xs text-center text-blue-400 bg-blue-950/40 p-2 rounded-lg border border-blue-500/20">ตรวจสอบสถานะ...</div>
@@ -189,10 +224,12 @@
     <!-- Script ควบคุมการทำงาน -->
     <script>
         function switchTab(tabId, btnElement) {
-            ['home', 'inventory', 'finance', 'tradein', 'testdrive', 'admin', 'auth'].forEach(id => {
-                document.getElementById('tab-' + id).classList.add('hidden');
+            ['home', 'inventory', 'finance', 'tradein', 'testdrive', 'sellcar', 'admin', 'auth'].forEach(id => {
+                const el = document.getElementById('tab-' + id);
+                if(el) el.classList.add('hidden');
             });
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const targetEl = document.getElementById('tab-' + tabId);
+            if(targetEl) targetEl.classList.remove('hidden');
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.className = "nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white";
@@ -215,6 +252,37 @@
             const gp = price * 0.03;
             document.getElementById('gp-result').innerText = `คำนวณ GP 3%: ${gp.toLocaleString()} THB`;
         }
+
+        window.handlePublishCar = async function() {
+            const title = document.getElementById('sell-title').value;
+            const price = document.getElementById('sell-price').value;
+            const imageUrl = document.getElementById('sell-image').value;
+            const contact = document.getElementById('sell-contact').value;
+
+            if(!title || !price) {
+                alert('กรุณากรอกชื่อรุ่นและราคารถยนต์ให้ครบถ้วน');
+                return;
+            }
+
+            try {
+                // บันทึกลง Firestore ใน collection 'cars'
+                await window.addDoc(window.collection(window.firebaseDb, "cars"), {
+                    title: title,
+                    price: parseFloat(price),
+                    imageUrl: imageUrl || "https://via.placeholder.com/400x300?text=No+Image",
+                    contact: contact,
+                    status: "pending", // รอแอดมินอนุมัติ
+                    createdAt: new Date().toISOString()
+                });
+                alert('ส่งประกาศขายรถสำเร็จ! ข้อมูลถูกส่งให้แอดมินตรวจสอบเรียบร้อยแล้ว');
+                document.getElementById('sell-title').value = '';
+                document.getElementById('sell-price').value = '';
+                document.getElementById('sell-image').value = '';
+                document.getElementById('sell-contact').value = '';
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+            }
+        };
 
         window.handleRegister = async function() {
             const email = document.getElementById('auth-email').value;
@@ -263,6 +331,7 @@
     </script>
 </body>
 </html>
+
 
 
 
