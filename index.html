@@ -17,44 +17,6 @@
             }
         }
     </script>
-    <!-- Firebase SDK v9 -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, addTimestamp, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBr4HfJZecQ-TNOqY9aAu8cHsi2Yv2lZcg",
-            authDomain: "car-market-place-db-32318.firebaseapp.com",
-            projectId: "car-market-place-db-32318",
-            storageBucket: "car-market-place-db-32318.firebasestorage.app",
-            messagingSenderId: "1094434102769",
-            appId: "1:1094434102769:web:640f92e45960ec2263b850",
-            measurementId: "G-6BZDYFG65R"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        window.firebaseAuth = auth;
-        window.firebaseDb = db;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.sendPasswordResetEmail = sendPasswordResetEmail;
-        window.signOut = signOut;
-        window.addDoc = addDoc;
-        window.collection = collection;
-
-        onAuthStateChanged(auth, (user) => {
-            const authStatusEl = document.getElementById('auth-status');
-            if (user) {
-                if(authStatusEl) authStatusEl.innerText = `เข้าสู่ระบบแล้ว: ${user.email}`;
-            } else {
-                if(authStatusEl) authStatusEl.innerText = 'ยังไม่ได้เข้าสู่ระบบ (กรุณาเข้าสู่ระบบก่อนโพสต์ขาย)';
-            }
-        });
-    </script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
@@ -66,7 +28,6 @@
                 <span class="text-xs bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">Chanthaburi Hub</span>
             </div>
             
-            <!-- เมนูหลัก 8 เมนู -->
             <nav id="nav-menus" class="flex flex-wrap items-center gap-1.5 md:gap-2">
                 <button onclick="switchTab('home', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20">หน้าแรก</button>
                 <button onclick="switchTab('inventory', this)" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-700 hover:text-white">คลังรถยนต์</button>
@@ -80,10 +41,9 @@
         </div>
     </header>
 
-    <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6">
 
-        <!-- 1. หน้าแรก (Home) -->
+        <!-- 1. หน้าแรก -->
         <section id="tab-home" class="space-y-6">
             <div class="bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border border-blue-500/30 rounded-2xl p-8 text-center">
                 <h1 class="text-3xl md:text-4xl font-extrabold mb-4">ยินดีต้อนรับสู่ Carmarket Place</h1>
@@ -95,7 +55,7 @@
             </div>
         </section>
 
-        <!-- 2. คลังรถยนต์ (Inventory) -->
+        <!-- 2. คลังรถยนต์ -->
         <section id="tab-inventory" class="hidden space-y-6">
             <h2 class="text-2xl font-bold">คลังรถยนต์พร้อมส่งมอบ</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -110,7 +70,7 @@
             </div>
         </section>
 
-        <!-- 3. คำนวณสินเชื่อ (Finance) -->
+        <!-- 3. คำนวณสินเชื่อ -->
         <section id="tab-finance" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
             <h2 class="text-2xl font-bold">ระบบคำนวณสินเชื่อรถยนต์</h2>
             <div class="space-y-4">
@@ -127,7 +87,7 @@
             </div>
         </section>
 
-        <!-- 4. ประเมินเทิร์นรถ (Trade-in) -->
+        <!-- 4. ประเมินเทิร์นรถ -->
         <section id="tab-tradein" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
             <h2 class="text-2xl font-bold">ประเมินราคารับซื้อ / เทิร์นรถยนต์</h2>
             <div class="space-y-4">
@@ -137,7 +97,7 @@
             </div>
         </section>
 
-        <!-- 5. จองทดลองขับ (Test Drive) -->
+        <!-- 5. จองทดลองขับ -->
         <section id="tab-testdrive" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
             <h2 class="text-2xl font-bold">ลงทะเบียนจองทดลองขับ</h2>
             <div class="space-y-4">
@@ -148,7 +108,7 @@
             </div>
         </section>
 
-        <!-- 6. ลงประกาศขายรถสำหรับผู้ขาย (Sell Car Form) -->
+        <!-- 6. ลงประกาศขายรถ -->
         <section id="tab-sellcar" class="hidden space-y-6 max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
             <div class="flex items-center justify-between border-b border-slate-700 pb-3">
                 <h2 class="text-2xl font-bold text-emerald-400">ลงประกาศขายรถยนต์ (ผู้ขาย)</h2>
@@ -173,13 +133,13 @@
                     <label class="block text-sm text-slate-400 mb-1">เบอร์โทรติดต่อผู้ขาย</label>
                     <input type="tel" id="sell-contact" placeholder="08x-xxx-xxxx" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500">
                 </div>
-                <button onclick="handlePublishCar()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/30">ส่งประกาศให้แอดมินตรวจสอบ</button>
+                <button id="btn-publish" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/30">ส่งประกาศให้แอดมินตรวจสอบ</button>
             </div>
         </section>
 
-        <!-- 7. แอดมินและคำนวณ GP (Admin) -->
+        <!-- 7. แอดมิน -->
         <section id="tab-admin" class="hidden space-y-6">
-            <h2 class="text-2xl font-bold">ระบบบริหารจัดการแอดมิน (3% Gross Profit & ตรวจสอบประกาศ)</h2>
+            <h2 class="text-2xl font-bold">ระบบบริหารจัดการแอดมิน (3% Gross Profit)</h2>
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4">
                 <p class="text-sm text-slate-400">คำนวณค่าธรรมเนียม GP 3% อัตโนมัติจากยอดขายลีดหรือราคาปิดการขาย</p>
                 <div class="flex gap-4">
@@ -190,7 +150,7 @@
             </div>
         </section>
 
-        <!-- 8. สมาชิก (Auth & Register with Password & Reset) -->
+        <!-- 8. สมาชิก -->
         <section id="tab-auth" class="hidden space-y-6 max-w-md mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700">
             <h2 class="text-2xl font-bold text-center">ระบบสมาชิก Firebase Auth</h2>
             <div id="auth-status" class="text-xs text-center text-blue-400 bg-blue-950/40 p-2 rounded-lg border border-blue-500/20">ตรวจสอบสถานะ...</div>
@@ -206,22 +166,132 @@
                 </div>
                 
                 <div class="flex gap-2 pt-2">
-                    <button onclick="handleLogin()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-medium transition-all text-sm">เข้าสู่ระบบ</button>
-                    <button onclick="handleRegister()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-medium transition-all text-sm">สมัครสมาชิก</button>
+                    <button id="btn-login" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-medium transition-all text-sm">เข้าสู่ระบบ</button>
+                    <button id="btn-register" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-medium transition-all text-sm">สมัครสมาชิก</button>
                 </div>
                 
                 <div class="text-center pt-2">
-                    <button onclick="handleResetPassword()" class="text-xs text-blue-400 hover:underline">ลืมรหัสผ่าน? ส่งลิงก์รีเซ็ตไปที่อีเมล</button>
+                    <button id="btn-reset" class="text-xs text-blue-400 hover:underline">ลืมรหัสผ่าน? ส่งลิงก์รีเซ็ตไปที่อีเมล</button>
                 </div>
                 <div class="text-center pt-2 border-t border-slate-700">
-                    <button onclick="handleLogout()" class="text-xs text-red-400 hover:underline">ออกจากระบบ (Log out)</button>
+                    <button id="btn-logout" class="text-xs text-red-400 hover:underline">ออกจากระบบ (Log out)</button>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Script ควบคุมการทำงาน -->
+    <!-- Firebase SDK & Event Listeners (แก้ปัญหาแคชและฟังก์ชันหลุด) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBr4HfJZecQ-TNOqY9aAu8cHsi2Yv2lZcg",
+            authDomain: "car-market-place-db-32318.firebaseapp.com",
+            projectId: "car-market-place-db-32318",
+            storageBucket: "car-market-place-db-32318.firebasestorage.app",
+            messagingSenderId: "1094434102769",
+            appId: "1:1094434102769:web:640f92e45960ec2263b850",
+            measurementId: "G-6BZDYFG65R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, (user) => {
+            const authStatusEl = document.getElementById('auth-status');
+            if (user) {
+                if(authStatusEl) authStatusEl.innerText = `เข้าสู่ระบบแล้ว: ${user.email}`;
+            } else {
+                if(authStatusEl) authStatusEl.innerText = 'ยังไม่ได้เข้าสู่ระบบ (กรุณาเข้าสู่ระบบก่อนใช้งาน)';
+            }
+        });
+
+        // ผูกปุ่มสมัครสมาชิก
+        document.getElementById('btn-register').addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert('สมัครสมาชิกสำเร็จและเข้าสู่ระบบเรียบร้อยแล้ว!');
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการสมัคร: ' + error.message);
+            }
+        });
+
+        // ผูกปุ่มเข้าสู่ระบบ
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                alert('เข้าสู่ระบบสำเร็จ!');
+            } catch (error) {
+                alert('เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
+            }
+        });
+
+        // ผูกปุ่มรีเซ็ตรหัสผ่าน
+        document.getElementById('btn-reset').addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value;
+            if(!email) {
+                alert('กรุณากรอกอีเมลของคุณก่อนกดขอรีเซ็ตรหัสผ่าน');
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert('ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมล ' + email + ' แล้ว');
+            } catch (error) {
+                alert('ไม่สามารถส่งอีเมลรีเซ็ตได้: ' + error.message);
+            }
+        });
+
+        // ผูกปุ่มออกจากระบบ
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                alert('ออกจากระบบเรียบร้อย');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        // ผูกปุ่มลงประกาศรถ
+        document.getElementById('btn-publish').addEventListener('click', async () => {
+            const title = document.getElementById('sell-title').value;
+            const price = document.getElementById('sell-price').value;
+            const imageUrl = document.getElementById('sell-image').value;
+            const contact = document.getElementById('sell-contact').value;
+
+            if(!title || !price) {
+                alert('กรุณากรอกชื่อรุ่นและราคารถยนต์ให้ครบถ้วน');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "cars"), {
+                    title: title,
+                    price: parseFloat(price),
+                    imageUrl: imageUrl || "https://via.placeholder.com/400x300?text=No+Image",
+                    contact: contact,
+                    status: "pending",
+                    createdAt: new Date().toISOString()
+                });
+                alert('ส่งประกาศขายรถสำเร็จ!');
+                document.getElementById('sell-title').value = '';
+                document.getElementById('sell-price').value = '';
+                document.getElementById('sell-image').value = '';
+                document.getElementById('sell-contact').value = '';
+            } catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        });
+    </script>
+
+    <!-- Script ควบคุมทั่วไป -->
     <script>
         function switchTab(tabId, btnElement) {
             ['home', 'inventory', 'finance', 'tradein', 'testdrive', 'sellcar', 'admin', 'auth'].forEach(id => {
@@ -252,85 +322,10 @@
             const gp = price * 0.03;
             document.getElementById('gp-result').innerText = `คำนวณ GP 3%: ${gp.toLocaleString()} THB`;
         }
-
-        window.handlePublishCar = async function() {
-            const title = document.getElementById('sell-title').value;
-            const price = document.getElementById('sell-price').value;
-            const imageUrl = document.getElementById('sell-image').value;
-            const contact = document.getElementById('sell-contact').value;
-
-            if(!title || !price) {
-                alert('กรุณากรอกชื่อรุ่นและราคารถยนต์ให้ครบถ้วน');
-                return;
-            }
-
-            try {
-                // บันทึกลง Firestore ใน collection 'cars'
-                await window.addDoc(window.collection(window.firebaseDb, "cars"), {
-                    title: title,
-                    price: parseFloat(price),
-                    imageUrl: imageUrl || "https://via.placeholder.com/400x300?text=No+Image",
-                    contact: contact,
-                    status: "pending", // รอแอดมินอนุมัติ
-                    createdAt: new Date().toISOString()
-                });
-                alert('ส่งประกาศขายรถสำเร็จ! ข้อมูลถูกส่งให้แอดมินตรวจสอบเรียบร้อยแล้ว');
-                document.getElementById('sell-title').value = '';
-                document.getElementById('sell-price').value = '';
-                document.getElementById('sell-image').value = '';
-                document.getElementById('sell-contact').value = '';
-            } catch (error) {
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
-            }
-        };
-
-        window.handleRegister = async function() {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            try {
-                await window.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
-                alert('สมัครสมาชิกสำเร็จและเข้าสู่ระบบเรียบร้อยแล้ว!');
-            } catch (error) {
-                alert('เกิดข้อผิดพลาดในการสมัคร: ' + error.message);
-            }
-        };
-
-        window.handleLogin = async function() {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            try {
-                await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
-                alert('เข้าสู่ระบบสำเร็จ!');
-            } catch (error) {
-                alert('เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
-            }
-        };
-
-        window.handleResetPassword = async function() {
-            const email = document.getElementById('auth-email').value;
-            if(!email) {
-                alert('กรุณากรอกอีเมลของคุณในช่องอีเมลก่อนกดขอรีเซ็ตรหัสผ่าน');
-                return;
-            }
-            try {
-                await window.sendPasswordResetEmail(window.firebaseAuth, email);
-                alert('ระบบได้ส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปที่อีเมล ' + email + ' แล้ว');
-            } catch (error) {
-                alert('ไม่สามารถส่งอีเมลรีเซ็ตได้: ' + error.message);
-            }
-        };
-
-        window.handleLogout = async function() {
-            try {
-                await window.signOut(window.firebaseAuth);
-                alert('ออกจากระบบเรียบร้อย');
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        };
     </script>
 </body>
 </html>
+
 
 
 
